@@ -79,7 +79,7 @@ const AddConstraintForm: React.FC<{ onAdd: (constraint: Constraint) => void, onC
             </div>
             <div className="flex justify-end gap-2 mt-3">
                 <button onClick={onCancel} className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-                <button onClick={handleSubmit} className="px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50" disabled={!description.trim()}>Add</button>
+                <button onClick={handleSubmit} className="px-3 py-1 text-sm font-medium text-white bg-zinc-800 rounded-md hover:bg-zinc-700 disabled:opacity-50" disabled={!description.trim()}>Add</button>
             </div>
         </div>
     );

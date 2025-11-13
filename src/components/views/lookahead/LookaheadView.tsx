@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { PLANNER_TASKS, MOCK_WEATHER } from './constants';
 import { LookaheadTask, Constraint, ConstraintStatus, ConstraintType, WeatherForecast } from './types';
 import ConstraintBadge from './components/ConstraintBadge';
@@ -23,6 +22,15 @@ const WeatherIcon: React.FC<{ icon: WeatherForecast['icon'] }> = ({ icon }) => {
 
 type ColumnKeys = 'id' | 'name' | 'resource' | 'health' | 'manHours';
 
+const columnConfig: Record<ColumnKeys, { minWidth: number }> = {
+    id: { minWidth: 40 },
+    name: { minWidth: 150 },
+    resource: { minWidth: 80 },
+    health: { minWidth: 140 },
+    manHours: { minWidth: 130 },
+};
+
+
 const LookaheadView: React.FC = () => {
     const [plannerTasks, setPlannerTasks] = useState<LookaheadTask[]>(PLANNER_TASKS);
     const [selectedTask, setSelectedTask] = useState<LookaheadTask | null>(null);
@@ -35,52 +43,34 @@ const LookaheadView: React.FC = () => {
         manHours: 175,
     });
 
-    const resizingColumnRef = useRef<{ id: ColumnKeys; startX: number; startWidth: number; } | null>(null);
-
     const handleMouseDown = useCallback((e: React.MouseEvent, columnId: ColumnKeys) => {
         e.preventDefault();
-        resizingColumnRef.current = {
-            id: columnId,
-            startX: e.clientX,
-            startWidth: columnWidths[columnId],
-        };
+
+        const startX = e.clientX;
+        const startWidth = columnWidths[columnId];
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
-    }, [columnWidths]);
-    
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!resizingColumnRef.current) return;
-        
-        const { id, startX, startWidth } = resizingColumnRef.current;
-        const deltaX = e.clientX - startX;
-        const newWidth = Math.max(startWidth + deltaX, 60); // min width 60px
 
-        setColumnWidths(prev => ({
-            ...prev,
-            [id]: newWidth,
-        }));
-    }, []);
+        const moveHandler = (moveEvent: MouseEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            const minWidth = columnConfig[columnId].minWidth;
+            const newWidth = Math.max(startWidth + deltaX, minWidth);
+            setColumnWidths(prev => ({
+                ...prev,
+                [columnId]: newWidth,
+            }));
+        };
 
-    const handleMouseUp = useCallback(() => {
-        resizingColumnRef.current = null;
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-    }, []);
-
-    useEffect(() => {
-        const moveHandler = (e: MouseEvent) => handleMouseMove(e);
-        const upHandler = () => handleMouseUp();
-
-        if (resizingColumnRef.current) {
-            window.addEventListener('mousemove', moveHandler);
-            window.addEventListener('mouseup', upHandler);
-        }
-        return () => {
+        const upHandler = () => {
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
             window.removeEventListener('mousemove', moveHandler);
             window.removeEventListener('mouseup', upHandler);
         };
-    }, [handleMouseMove, handleMouseUp]);
 
+        window.addEventListener('mousemove', moveHandler);
+        window.addEventListener('mouseup', upHandler);
+    }, [columnWidths]);
 
     const totalLeftPanelWidth = useMemo(() => Object.values(columnWidths).reduce((sum, width) => sum + width, 0), [columnWidths]);
 
@@ -183,13 +173,13 @@ const LookaheadView: React.FC = () => {
             const progressDays = Math.floor(durationDays * progressPercent);
 
             const row = (
-                <div key={task.id} className="flex border-b border-gray-200" style={{ height: `${ROW_HEIGHT}px`}}>
+                <div key={task.id} className="flex border-b border-gray-200 first:border-t" style={{ height: `${ROW_HEIGHT}px`}}>
                     {/* Left Panel */}
-                    <div className="sticky left-0 bg-white border-r border-gray-200 z-10 flex" style={{ width: `${totalLeftPanelWidth}px` }}>
-                        <div className="flex-shrink-0 flex items-center justify-center px-2 text-gray-500 text-sm" style={{ width: `${columnWidths.id}px` }}>
+                    <div className="sticky left-0 bg-white border-r-2 border-gray-300 z-10 flex" style={{ width: `${totalLeftPanelWidth}px` }}>
+                        <div className="flex-shrink-0 flex items-center justify-center px-2 text-gray-500 text-sm overflow-hidden" style={{ width: `${columnWidths.id}px` }}>
                             {task.id}
                         </div>
-                        <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200" style={{ width: `${columnWidths.name}px`, paddingLeft: `${8 + (level * 24)}px`}}>
+                        <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200 overflow-hidden" style={{ width: `${columnWidths.name}px`, paddingLeft: `${8 + (level * 24)}px`}}>
                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mr-1">
                                 {task.children ? (
                                     <button
@@ -204,16 +194,24 @@ const LookaheadView: React.FC = () => {
                             </div>
                             <span className="truncate font-medium text-gray-800 text-sm">{task.name}</span>
                         </div>
-                         <div className="flex-shrink-0 flex items-center px-2 truncate border-l border-gray-200 text-sm" style={{ width: `${columnWidths.resource}px` }}>{task.resource}</div>
-                         <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200" style={{ width: `${columnWidths.health}px` }}>
+                         <div className="flex-shrink-0 flex items-center px-2 truncate border-l border-gray-200 text-sm overflow-hidden" style={{ width: `${columnWidths.resource}px` }}>{task.resource}</div>
+                         <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200 overflow-hidden" style={{ width: `${columnWidths.health}px` }}>
                              <ConstraintBadge status={task.status} onClick={() => setSelectedTask(task)} />
                          </div>
-                         <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200" style={{ width: `${columnWidths.manHours}px` }}>
+                         <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200 overflow-hidden" style={{ width: `${columnWidths.manHours}px` }}>
                             <ManHoursBar manHours={task.manHours} />
                          </div>
                     </div>
                     {/* Right Panel (Timeline) */}
-                    <div className="relative flex-grow">
+                    <div className="relative flex-grow flex">
+                        {Array.from({ length: totalDays }).map((_, i) => {
+                            const date = addDays(projectStartDate, i);
+                            const day = date.getDay();
+                            const isWeekend = day === 0 || day === 6;
+                            return (
+                                <div key={i} className={`h-full border-r border-gray-100 ${isWeekend ? 'bg-gray-50' : ''}`} style={{ width: `${DAY_WIDTH}px`}}></div>
+                            );
+                        })}
                         <div className={`absolute top-1/2 -translate-y-1/2 h-4 bg-gray-200 rounded-sm ${isCritical ? 'border-t-2 border-b-2 border-red-700' : ''}`}
                              style={{ left: `${offsetDays * DAY_WIDTH}px`, width: `${durationDays * DAY_WIDTH}px`}}
                         >
@@ -253,8 +251,8 @@ const LookaheadView: React.FC = () => {
                     <div className="relative" style={{ minWidth: `${totalLeftPanelWidth + (totalDays * DAY_WIDTH)}px`}}>
                         {/* Header */}
                         <div className="sticky top-0 bg-gray-50 z-20 text-xs font-semibold text-gray-600 uppercase border-b border-t border-gray-200">
-                            <div className="flex" style={{ height: '30px' }}>
-                                <div className="sticky left-0 bg-gray-50 border-r border-gray-200" style={{ width: `${totalLeftPanelWidth}px` }}></div>
+                            <div className="flex border-b border-gray-200" style={{ height: '30px' }}>
+                                <div className="sticky left-0 bg-gray-50 flex border-r-2 border-gray-300" style={{ width: `${totalLeftPanelWidth}px` }}></div>
                                 <div className="flex-grow flex">
                                     {weekHeaders.map((week, i) => (
                                         <div key={i} className="flex items-center justify-center border-r border-gray-200" style={{ width: `${week.days * DAY_WIDTH}px`}}>{week.label}</div>
@@ -262,7 +260,7 @@ const LookaheadView: React.FC = () => {
                                 </div>
                             </div>
                              <div className="flex" style={{ height: '50px' }}>
-                                 <div className="sticky left-0 bg-gray-50 flex border-r border-gray-200" style={{ width: `${totalLeftPanelWidth}px` }}>
+                                 <div className="sticky left-0 bg-gray-50 flex border-r-2 border-gray-300" style={{ width: `${totalLeftPanelWidth}px` }}>
                                     <div className="relative flex-shrink-0 px-2 flex items-end justify-center pb-1" style={{ width: `${columnWidths.id}px`}}>
                                         ID
                                         <Resizer onMouseDown={(e) => handleMouseDown(e, 'id')} />
@@ -312,17 +310,8 @@ const LookaheadView: React.FC = () => {
                              </div>
                         </div>
                         {/* Body */}
-                        <div>
-                            <div className="absolute top-0 left-0 h-full w-full z-0 pointer-events-none">
-                                <div className="flex h-full" style={{ paddingLeft: `${totalLeftPanelWidth}px` }}>
-                                    {Array.from({ length: totalDays }).map((_, i) => (
-                                        <div key={i} className="h-full border-r border-gray-100" style={{ width: `${DAY_WIDTH}px` }}></div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="relative z-10">
-                                {renderTaskRows(plannerTasks, 0)}
-                            </div>
+                        <div className="relative z-10">
+                            {renderTaskRows(plannerTasks, 0)}
                         </div>
                     </div>
                 </div>

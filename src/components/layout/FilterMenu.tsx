@@ -164,7 +164,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
                     )}
                     <div className="flex justify-end gap-2 pt-1">
                         <button onClick={() => { setIsAdding(false); setNewRule({}) }} className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-                        <button onClick={addFilter} className="px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Apply</button>
+                        <button onClick={addFilter} className="px-3 py-1 text-sm font-medium text-white bg-zinc-800 rounded-md hover:bg-zinc-700">Apply</button>
                     </div>
                 </div>
             )}

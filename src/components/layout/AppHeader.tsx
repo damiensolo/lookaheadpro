@@ -61,7 +61,7 @@ const AppHeader: React.FC = () => {
                             onClose={() => setShowFieldsMenu(false)} 
                         />}
                     </div>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-zinc-800 rounded-md hover:bg-zinc-700">
                         <PlusIcon className="w-4 h-4" />
                         <span>New Task</span>
                     </button>
