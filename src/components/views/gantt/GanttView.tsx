@@ -49,7 +49,7 @@ const GanttView: React.FC = () => {
     }
 
     return (
-        <div className="w-full overflow-x-auto h-full">
+        <div className="w-full h-full">
             <div className="relative" style={{ minWidth: `${totalDays * dayWidth + taskListWidth}px` }}>
                 <div className="sticky top-0 bg-gray-50 z-10 border-b border-gray-200">
                     <div className="flex h-12">

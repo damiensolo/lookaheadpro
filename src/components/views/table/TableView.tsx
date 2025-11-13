@@ -173,7 +173,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   const headerHeightClass = getHeaderHeight(displayDensity);
 
   return (
-    <table className="min-w-full table-fixed text-sm text-left text-gray-500 whitespace-nowrap border-collapse">
+    <table className="w-full table-fixed text-sm text-left text-gray-500 whitespace-nowrap border-collapse">
       <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-20">
         <tr ref={headerRef}>
           <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`}>
@@ -189,40 +189,43 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
               />
             </div>
           </th>
-          {visibleColumns.map((col) => (
-            <th 
-              key={col.id} 
-              scope="col" 
-              className={`${headerHeightClass} px-6 font-semibold border-b border-gray-200 relative group cursor-pointer align-middle ${showGridLines ? 'border-r border-gray-200' : ''}`}
-              style={{ width: col.width, zIndex: 5 }}
-              onClick={(e) => {
-                if (col.id === 'details') return;
-                if ((e.target as HTMLElement).closest('.absolute.top-0.right-0')) return;
-                handleSort(col.id);
-              }}
-              draggable
-              onDragStart={(e) => handleDragStartHeader(e, col.id)}
-              onDragOver={(e) => handleDragOverHeader(e, col.id)}
-              onDrop={(e) => handleDropHeader(e, col.id)}
-              onDragLeave={() => setDropIndicator(null)}
-            >
-              {dropIndicator?.id === col.id && (
-                <div className={`absolute top-0 h-full w-1 bg-blue-500 rounded-full ${dropIndicator.position === 'left' ? 'left-0' : 'right-0'}`} style={{ zIndex: 20 }} />
-              )}
-              <div className={`flex items-center gap-1 ${col.id === 'details' ? 'justify-center' : ''}`}>
-                {col.label}
-                {sortConfig?.columnId === col.id ? (
-                  sortConfig.direction === 'asc' ? 
-                    <ArrowUpIcon className="w-4 h-4 text-gray-600" /> : 
-                    <ArrowDownIcon className="w-4 h-4 text-gray-600" />
-                ) : (
-                  col.id !== 'details' && <SortIcon className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          {visibleColumns.map((col, index) => {
+            const isLastVisibleColumn = index === visibleColumns.length - 1;
+            return (
+              <th 
+                key={col.id} 
+                scope="col" 
+                className={`${headerHeightClass} px-6 font-semibold border-b border-gray-200 relative group cursor-pointer align-middle ${showGridLines && !isLastVisibleColumn ? 'border-r border-gray-200' : ''}`}
+                style={{ width: col.width, zIndex: 5 }}
+                onClick={(e) => {
+                  if (col.id === 'details') return;
+                  if ((e.target as HTMLElement).closest('.absolute.top-0.right-0')) return;
+                  handleSort(col.id);
+                }}
+                draggable
+                onDragStart={(e) => handleDragStartHeader(e, col.id)}
+                onDragOver={(e) => handleDragOverHeader(e, col.id)}
+                onDrop={(e) => handleDropHeader(e, col.id)}
+                onDragLeave={() => setDropIndicator(null)}
+              >
+                {dropIndicator?.id === col.id && (
+                  <div className={`absolute top-0 h-full w-1 bg-blue-500 rounded-full ${dropIndicator.position === 'left' ? 'left-0' : 'right-0'}`} style={{ zIndex: 20 }} />
                 )}
-              </div>
-              <Resizer onMouseDown={onMouseDown(col.id, col.minWidth)} />
-            </th>
-          ))}
-          <th scope="col" className={`${headerHeightClass} w-auto border-b border-gray-200`}></th>
+                <div className={`flex items-center gap-1 ${col.id === 'details' ? 'justify-center' : ''}`}>
+                  {col.label}
+                  {sortConfig?.columnId === col.id ? (
+                    sortConfig.direction === 'asc' ? 
+                      <ArrowUpIcon className="w-4 h-4 text-gray-600" /> : 
+                      <ArrowDownIcon className="w-4 h-4 text-gray-600" />
+                  ) : (
+                    col.id !== 'details' && <SortIcon className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </div>
+                <Resizer onMouseDown={onMouseDown(col.id, col.minWidth)} />
+              </th>
+            );
+          })}
+          <th scope="col" className={`${headerHeightClass} border-b border-gray-200 w-full`}></th>
         </tr>
       </thead>
       <tbody>

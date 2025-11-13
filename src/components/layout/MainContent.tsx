@@ -8,18 +8,24 @@ import LookaheadView from '../views/lookahead/LookaheadView';
 const MainContent: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
     const { activeViewMode } = useProject();
 
-    switch(activeViewMode) {
-      case 'table':
-        return <TableView isScrolled={isScrolled} />;
-      case 'board':
-        return <BoardView />;
-      case 'gantt':
-        return <GanttView />;
-      case 'lookahead':
-        return <LookaheadView />;
-      default:
-        return null;
+    const renderView = () => {
+        switch(activeViewMode) {
+          case 'table':
+            return <TableView isScrolled={isScrolled} />;
+          case 'board':
+            return <BoardView />;
+          case 'gantt':
+            return <GanttView />;
+          case 'lookahead':
+            return <LookaheadView />;
+          default:
+            return null;
+        }
     }
+
+    // Return the view directly without a scrolling wrapper.
+    // The parent <main> element in AppLayout now handles all scrolling.
+    return <>{renderView()}</>;
 };
 
 export default MainContent;

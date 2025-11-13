@@ -64,16 +64,15 @@ const ItemDetailsPanel: React.FC<ItemDetailsPanelProps> = ({ task, onClose, onPr
 
   return (
     <aside
-      className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 z-30 transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
+      className={`flex-shrink-0 bg-white border-l border-gray-200 transition-all duration-300 ease-in-out overflow-hidden ${
+        isOpen ? 'w-[400px]' : 'w-0 border-l-0'
       }`}
-      style={{ width: '400px' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="details-panel-title"
     >
       {task && (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full" style={{ width: '400px' }}>
           <header className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
             <h2 id="details-panel-title" className="text-lg font-semibold text-gray-800 truncate">{task.name}</h2>
             <button onClick={handleClose} className="p-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800" aria-label="Close details">

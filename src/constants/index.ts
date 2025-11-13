@@ -1,7 +1,7 @@
 import { Column, Status, Priority, ColumnId, FilterOperator } from '../types';
 
 export const DEFAULT_COLUMNS: Column[] = [
-  { id: 'name', label: 'Task Name', width: '350px', visible: true, minWidth: 200 },
+  { id: 'name', label: 'Task Name', width: '300px', visible: true, minWidth: 200 },
   { id: 'status', label: 'Status', width: '150px', visible: true, minWidth: 120 },
   { id: 'assignee', label: 'Assignee', width: '150px', visible: true, minWidth: 120 },
   { id: 'dates', label: 'Dates', width: '220px', visible: true, minWidth: 180 },

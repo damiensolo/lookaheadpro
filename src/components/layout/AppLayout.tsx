@@ -18,7 +18,7 @@ const AppLayout: React.FC = () => {
     }, []);
 
     return (
-        <div className="flex flex-col h-screen bg-white font-sans text-gray-800">
+        <div className="flex flex-col h-full bg-white font-sans text-gray-800 overflow-hidden">
             {modalState && (
                 <CreateViewModal
                     title={modalState.type === 'rename' ? 'Rename View' : 'Create New View'}
@@ -28,14 +28,16 @@ const AppLayout: React.FC = () => {
                 />
             )}
             <AppHeader />
-            <main ref={mainContentRef} className="flex-grow overflow-auto relative">
-                <MainContent isScrolled={isScrolled} />
-            </main>
-            <ItemDetailsPanel 
-                task={detailedTask} 
-                onClose={() => setDetailedTaskId(null)} 
-                onPriorityChange={handlePriorityChange} 
-            />
+            <div className="flex flex-1 overflow-hidden">
+                <main ref={mainContentRef} className="flex-1 overflow-auto transition-all duration-300 ease-in-out">
+                    <MainContent isScrolled={isScrolled} />
+                </main>
+                <ItemDetailsPanel 
+                    task={detailedTask} 
+                    onClose={() => setDetailedTaskId(null)} 
+                    onPriorityChange={handlePriorityChange} 
+                />
+            </div>
         </div>
     );
 };

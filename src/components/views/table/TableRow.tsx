@@ -210,7 +210,8 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
             isScrolled={isScrolled}
             rowHeightClass={rowHeightClass}
         />
-        {columns.map((col) => {
+        {columns.map((col, index) => {
+            const isLastColumn = index === columns.length - 1;
             const isEditing = editingCell?.taskId === task.id && editingCell?.column === col.id;
             const isEditable = isColumnEditable(col.id);
             
@@ -218,7 +219,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
             if (isEditable) cellClasses += ' cursor-pointer';
 
             cellClasses += ' border-b border-gray-200';
-            if (showGridLines) {
+            if (showGridLines && !isLastColumn) {
               cellClasses += ' border-r border-gray-200';
             }
             
@@ -250,7 +251,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
                 </td>
             )
         })}
-        <td className={`${rowHeightClass} border-b border-gray-200`}></td>
+        <td className="border-b border-gray-200"></td>
       </tr>
       {task.children && task.isExpanded && task.children?.map(child => (
         <TableRow 

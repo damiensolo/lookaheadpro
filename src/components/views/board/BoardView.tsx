@@ -55,7 +55,7 @@ const BoardView: React.FC = () => {
     };
 
     return (
-        <div className="flex gap-6 p-4 overflow-x-auto h-full bg-gray-50">
+        <div className="flex gap-6 p-4 h-full bg-gray-50 min-w-min">
             {statusColumns.map(status => (
                 <div key={status} className="w-80 bg-gray-100 rounded-lg flex-shrink-0 flex flex-col">
                     <div className="flex items-center justify-between p-3 sticky top-0 bg-gray-100 z-10">

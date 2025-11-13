@@ -58,7 +58,7 @@ export type ColumnId = 'name' | 'status' | 'assignee' | 'dates' | 'progress' | '
 export interface Column {
   id: ColumnId;
   label: string;
-  width: string;
+  width?: string;
   visible: boolean;
   minWidth?: number;
 }
