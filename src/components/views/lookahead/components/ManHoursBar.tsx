@@ -11,9 +11,6 @@ const ManHoursBar: React.FC<{ manHours: ManHours }> = ({ manHours }) => {
 
   return (
     <div className="flex items-center gap-2 w-full">
-        <div className="text-xs text-gray-500 text-right flex-shrink-0 whitespace-nowrap">
-            {actual}h / {budget}h
-        </div>
         <div className="h-2 flex-grow bg-gray-200 rounded-full flex overflow-hidden" style={{ minWidth: '40px' }}>
             {overBudget ? (
             <>
@@ -26,6 +23,9 @@ const ManHoursBar: React.FC<{ manHours: ManHours }> = ({ manHours }) => {
                 <div className="h-full bg-blue-200" style={{ width: `${budgetPercent - actualPercent}%` }} title={`Remaining: ${remaining}h`}></div>
             </>
             )}
+        </div>
+        <div className="text-xs text-gray-500 text-right flex-shrink-0 whitespace-nowrap w-20">
+            {actual}h / {budget}h
         </div>
     </div>
   );
