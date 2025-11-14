@@ -1,10 +1,9 @@
 import React from 'react';
 import { useProject } from '../../context/ProjectContext';
-import ViewTabs from './ViewTabs';
-import ViewModeSwitcher from './ViewModeSwitcher';
+import ViewControls from './ViewControls';
 import FilterMenu from './FilterMenu';
 import FieldsMenu from './FieldsMenu';
-import { FilterIcon, FieldsIcon, SearchIcon, PlusIcon } from '../common/Icons';
+import { FilterIcon, SearchIcon, PlusIcon, SettingsIcon } from '../common/Icons';
 
 const AppHeader: React.FC = () => {
     const { 
@@ -17,22 +16,24 @@ const AppHeader: React.FC = () => {
 
     return (
         <header className="flex-shrink-0 border-b border-gray-200">
-            <div className="flex items-center justify-between p-4">
-                <h1 className="text-xl font-bold text-gray-900">Project Plan</h1>
-                <ViewModeSwitcher activeMode={activeViewMode} onModeChange={setActiveViewMode} />
-            </div>
-            <div className="flex items-center justify-between px-4 pb-2">
-                <ViewTabs 
-                    views={views}
-                    activeViewId={activeViewId}
-                    defaultViewId={defaultViewId}
-                    onSelectView={setActiveViewId}
-                    onCreateView={() => setModalState({ type: 'create' })}
-                    onRenameView={(view) => setModalState({ type: 'rename', view })}
-                    onDeleteView={handleDeleteView}
-                    onSetDefaultView={setDefaultViewId}
-                    onReorderViews={setViews}
-                />
+            <div className="flex items-center justify-between p-2">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-xl font-bold text-gray-900 pl-2">Project Plan</h1>
+                    <ViewControls
+                        views={views}
+                        activeViewId={activeViewId}
+                        defaultViewId={defaultViewId}
+                        onSelectView={setActiveViewId}
+                        onCreateView={() => setModalState({ type: 'create' })}
+                        onRenameView={(view) => setModalState({ type: 'rename', view })}
+                        onDeleteView={handleDeleteView}
+                        onSetDefaultView={setDefaultViewId}
+                        onReorderViews={setViews}
+                        activeMode={activeViewMode}
+                        onModeChange={setActiveViewMode}
+                    />
+                </div>
+                
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -53,9 +54,12 @@ const AppHeader: React.FC = () => {
                         {showFilterMenu && <FilterMenu onClose={() => setShowFilterMenu(false)} />}
                     </div>
                     <div className="relative">
-                        <button onClick={() => setShowFieldsMenu(p => !p)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                            <FieldsIcon className="w-4 h-4" />
-                            <span>Fields</span>
+                        <button 
+                            onClick={() => setShowFieldsMenu(p => !p)} 
+                            className="p-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                            aria-label="View settings"
+                        >
+                            <SettingsIcon className="w-4 h-4" />
                         </button>
                         {showFieldsMenu && <FieldsMenu 
                             onClose={() => setShowFieldsMenu(false)} 

@@ -10,7 +10,7 @@ const ManHoursBar: React.FC<{ manHours: ManHours }> = ({ manHours }) => {
   const remaining = budget - actual;
 
   return (
-    <div className="flex items-center gap-2 w-full">
+    <div className="flex items-center gap-0 pr-2 w-full">
         <div className="h-2 flex-grow bg-gray-200 rounded-full flex overflow-hidden" style={{ minWidth: '40px' }}>
             {overBudget ? (
             <>

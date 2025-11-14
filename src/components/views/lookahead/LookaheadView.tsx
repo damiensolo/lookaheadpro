@@ -1,10 +1,13 @@
-import React, { useState, useMemo, useCallback } from 'react';
+
+
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { PLANNER_TASKS, MOCK_WEATHER } from './constants';
 import { LookaheadTask, Constraint, ConstraintStatus, ConstraintType, WeatherForecast } from './types';
 import ConstraintBadge from './components/ConstraintBadge';
 import ManHoursBar from './components/ManHoursBar';
 import LookaheadDetailsPanel from './components/LookaheadDetailsPanel';
 import SparklineChart from './components/SparklineChart';
+import DraggableTaskBar from './components/DraggableTaskBar';
 import { ChevronDownIcon, ChevronRightIcon, DocumentIcon, SunIcon, CloudIcon, CloudRainIcon } from '../../common/Icons';
 import { addDays, getDaysDiff, formatDateISO, parseLookaheadDate } from '../../../lib/dateUtils';
 
@@ -34,7 +37,21 @@ const columnConfig: Record<ColumnKeys, { minWidth: number }> = {
 const LookaheadView: React.FC = () => {
     const [plannerTasks, setPlannerTasks] = useState<LookaheadTask[]>(PLANNER_TASKS);
     const [selectedTask, setSelectedTask] = useState<LookaheadTask | null>(null);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        const handleScroll = () => {
+            if (container) {
+                setIsScrolled(container.scrollLeft > 0);
+            }
+        };
+        container?.addEventListener('scroll', handleScroll);
+        handleScroll();
+        return () => container?.removeEventListener('scroll', handleScroll);
+    }, []);
+
     const [columnWidths, setColumnWidths] = useState({
         id: 50,
         name: 250,
@@ -72,7 +89,7 @@ const LookaheadView: React.FC = () => {
         window.addEventListener('mouseup', upHandler);
     }, [columnWidths]);
 
-    const totalLeftPanelWidth = useMemo(() => Object.values(columnWidths).reduce((sum, width) => sum + width, 0), [columnWidths]);
+    const totalLeftPanelWidth = useMemo(() => Object.values(columnWidths).reduce((sum, width) => sum + Number(width), 0), [columnWidths]);
 
     const { projectStartDate, projectEndDate, totalDays } = useMemo(() => {
         const allTasks: LookaheadTask[] = [];
@@ -144,6 +161,25 @@ const LookaheadView: React.FC = () => {
         setPlannerTasks(prev => addConstraintRecursively(prev));
     };
 
+    const handleUpdateTaskDates = useCallback((taskId: string | number, newStart: string, newFinish: string) => {
+        const updateRecursively = (tasks: LookaheadTask[]): LookaheadTask[] => {
+            return tasks.map(task => {
+                if (task.id === taskId) {
+                    return {
+                        ...task,
+                        startDate: newStart,
+                        finishDate: newFinish,
+                    };
+                }
+                if (task.children) {
+                    return { ...task, children: updateRecursively(task.children) };
+                }
+                return task;
+            });
+        };
+        setPlannerTasks(prev => updateRecursively(prev));
+    }, []);
+
     const weekHeaders: { label: string; days: number }[] = [];
     let currentDate = new Date(projectStartDate);
     while (currentDate <= projectEndDate) {
@@ -163,19 +199,10 @@ const LookaheadView: React.FC = () => {
     
     const renderTaskRows = (tasks: LookaheadTask[], level: number): React.ReactNode[] => {
         return tasks.flatMap(task => {
-            const isBlocked = Object.values(task.status).includes(ConstraintStatus.Overdue);
-            const isCritical = !!task.isCriticalPath;
-            const taskStart = parseLookaheadDate(task.startDate);
-            const taskEnd = parseLookaheadDate(task.finishDate);
-            const offsetDays = getDaysDiff(projectStartDate, taskStart);
-            const durationDays = getDaysDiff(taskStart, taskEnd) + 1;
-            const progressPercent = task.manHours.budget > 0 ? (task.manHours.actual / task.manHours.budget) : 0;
-            const progressDays = Math.floor(durationDays * progressPercent);
-
             const row = (
                 <div key={task.id} className="flex border-b border-gray-200 first:border-t" style={{ height: `${ROW_HEIGHT}px`}}>
                     {/* Left Panel */}
-                    <div className="sticky left-0 bg-white z-10 flex" style={{ width: `${totalLeftPanelWidth}px` }}>
+                    <div className={`sticky left-0 bg-white z-30 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
                         <div className="flex-shrink-0 flex items-center justify-center px-2 text-gray-500 text-sm overflow-hidden" style={{ width: `${columnWidths.id}px` }}>
                             {task.id}
                         </div>
@@ -203,29 +230,13 @@ const LookaheadView: React.FC = () => {
                          </div>
                     </div>
                     {/* Right Panel (Timeline) */}
-                    <div className="relative flex-grow flex pl-4 border-l-2 border-gray-200">
-                        {Array.from({ length: totalDays }).map((_, i) => {
-                            const date = addDays(projectStartDate, i);
-                            const day = date.getDay();
-                            const isWeekend = day === 0 || day === 6;
-                            return (
-                                <div key={i} className={`h-full border-r border-gray-100 ${isWeekend ? 'bg-gray-50' : ''}`} style={{ width: `${DAY_WIDTH}px`}}></div>
-                            );
-                        })}
-                        <div className={`absolute top-1/2 -translate-y-1/2 h-4 bg-gray-200 rounded-full overflow-hidden 
-                            ${isBlocked ? 'ring-1 ring-inset ring-red-600' : ''}
-                            ${isCritical && !isBlocked ? 'border-t-2 border-b-2 border-red-700' : ''}`}
-                             style={{ left: `${offsetDays * DAY_WIDTH}px`, width: `${durationDays * DAY_WIDTH}px`}}
-                        >
-                            <div className="flex h-full">
-                                {Array.from({ length: durationDays }).map((_, i) => (
-                                    <div key={i} className="flex-1 border-r border-white/50 first:border-l-0" style={{
-                                        backgroundColor: isBlocked ? '#fecaca' : // red-200
-                                                        (i < progressDays ? '#3b82f6' : '#bfdbfe') // blue-500 : blue-200
-                                    }}></div>
-                                ))}
-                            </div>
-                        </div>
+                    <div className="relative flex-grow flex">
+                        <DraggableTaskBar
+                            task={task}
+                            projectStartDate={projectStartDate}
+                            dayWidth={DAY_WIDTH}
+                            onUpdateTask={handleUpdateTaskDates}
+                        />
                     </div>
                 </div>
             );
@@ -249,20 +260,41 @@ const LookaheadView: React.FC = () => {
 
             {/* Main Planner */}
             <div className="flex-grow overflow-hidden relative flex">
-                <div className="flex-grow overflow-auto">
+                <div ref={scrollContainerRef} className="flex-grow overflow-auto min-w-0">
                     <div className="relative" style={{ minWidth: `${totalLeftPanelWidth + (totalDays * DAY_WIDTH)}px`}}>
+                        {/* Unified Background Grid */}
+                        <div
+                            className="absolute top-0 left-0 w-full h-full pt-[80px] flex"
+                            style={{ zIndex: 0 }}
+                            aria-hidden="true"
+                        >
+                            <div style={{ width: `${totalLeftPanelWidth}px` }} className="flex-shrink-0 sticky left-0 bg-white z-10"></div>
+                            <div
+                                className="flex-grow grid"
+                                style={{ gridTemplateColumns: `repeat(${totalDays}, ${DAY_WIDTH}px)` }}
+                            >
+                                {Array.from({ length: totalDays }).map((_, i) => {
+                                    const date = addDays(projectStartDate, i);
+                                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                                    return (
+                                        <div key={i} className={`h-full border-r border-gray-100 ${isWeekend ? 'bg-gray-50' : ''}`}></div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         {/* Header */}
-                        <div className="sticky top-0 bg-gray-50 z-20 text-xs font-semibold text-gray-600 uppercase border-b border-t border-gray-200">
+                        <div className="sticky top-0 bg-gray-50 z-40 text-xs font-semibold text-gray-600 uppercase border-b border-t border-gray-200">
                             <div className="flex border-b border-gray-200" style={{ height: '30px' }}>
-                                <div className="sticky left-0 bg-gray-50 flex" style={{ width: `${totalLeftPanelWidth}px` }}></div>
-                                <div className="flex-grow flex pl-4 border-l-2 border-gray-200">
+                                <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}></div>
+                                <div className="flex-grow flex">
                                     {weekHeaders.map((week, i) => (
                                         <div key={i} className="flex items-center justify-center border-r border-gray-200" style={{ width: `${week.days * DAY_WIDTH}px`}}>{week.label}</div>
                                     ))}
                                 </div>
                             </div>
                              <div className="flex" style={{ height: '50px' }}>
-                                 <div className="sticky left-0 bg-gray-50 flex" style={{ width: `${totalLeftPanelWidth}px` }}>
+                                 <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
                                     <div className="relative flex-shrink-0 px-2 flex items-end justify-center pb-1" style={{ width: `${columnWidths.id}px`}}>
                                         ID
                                         <Resizer onMouseDown={(e) => handleMouseDown(e, 'id')} />
@@ -284,15 +316,20 @@ const LookaheadView: React.FC = () => {
                                         <Resizer onMouseDown={(e) => handleMouseDown(e, 'manHours')} />
                                     </div>
                                  </div>
-                                 <div className="flex-grow flex pl-4 border-l-2 border-gray-200">
+                                 <div
+                                    className="flex-grow grid"
+                                    style={{ gridTemplateColumns: `repeat(${totalDays}, ${DAY_WIDTH}px)` }}
+                                >
                                     {Array.from({length: totalDays}).map((_, i) => {
                                         const date = addDays(projectStartDate, i);
                                         const dateString = formatDateISO(date);
                                         const forecast = weatherByDate.get(dateString);
-                                        const day = date.getDay();
-                                        const isWeekend = day === 0 || day === 6;
                                         return (
-                                            <div key={i} className={`flex flex-col items-center justify-end pb-1 border-r border-gray-200 ${isWeekend ? 'bg-gray-100' : ''}`} style={{width: `${DAY_WIDTH}px`}}>
+                                            <div key={i} className="flex flex-col items-center justify-between py-1 border-r border-gray-200">
+                                                <div className="flex items-center">
+                                                    <span className="text-[10px] text-gray-400 mr-0.5">{date.toLocaleString('default', { weekday: 'short' })[0]}</span>
+                                                    <span className="font-normal">{date.getDate()}</span>
+                                                </div>
                                                 <div className="h-7 flex flex-col items-center justify-center">
                                                     {forecast ? (
                                                         <div className="flex flex-col items-center" title={`${forecast.temp}°F`}>
@@ -301,16 +338,13 @@ const LookaheadView: React.FC = () => {
                                                         </div>
                                                     ) : <div style={{height: '28px'}}></div>}
                                                 </div>
-                                                <div className="flex items-center">
-                                                    <span className="text-[10px] text-gray-400 mr-0.5">{date.toLocaleString('default', { weekday: 'short' })[0]}</span>
-                                                    <span className="font-normal">{date.getDate()}</span>
-                                                </div>
                                             </div>
                                         )
                                     })}
                                  </div>
                              </div>
                         </div>
+
                         {/* Body */}
                         <div className="relative z-10">
                             {renderTaskRows(plannerTasks, 0)}

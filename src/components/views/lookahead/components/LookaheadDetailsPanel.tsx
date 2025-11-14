@@ -118,7 +118,7 @@ const LookaheadDetailsPanel: React.FC<LookaheadDetailsPanelProps> = ({ task, onC
 
   return (
     <aside
-      className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 z-30 transition-transform duration-300 ease-in-out ${
+      className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 z-50 transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
       style={{ width: '400px' }}
