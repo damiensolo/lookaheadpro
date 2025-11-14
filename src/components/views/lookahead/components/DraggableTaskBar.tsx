@@ -7,16 +7,50 @@ interface DraggableTaskBarProps {
     projectStartDate: Date;
     dayWidth: number;
     onUpdateTask: (taskId: string | number, newStart: string, newFinish: string) => void;
+    onDayClick: (task: LookaheadTask, date: Date) => void;
 }
 
-const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartDate, dayWidth, onUpdateTask }) => {
+// Helper to determine task status
+const getTaskStatus = (task: LookaheadTask): 'ready' | 'at_risk' | 'blocked' => {
+  const statuses = Object.values(task.status);
+  if (statuses.includes(ConstraintStatus.Overdue)) {
+    return 'blocked';
+  }
+  if (statuses.includes(ConstraintStatus.Pending)) {
+    return 'at_risk';
+  }
+  return 'ready';
+};
+
+// Styles for different statuses
+const statusStyles: Record<'ready' | 'at_risk' | 'blocked', { bar: string; progress: string; ring: string }> = {
+  ready: {
+    bar: 'bg-green-200',
+    progress: 'bg-green-500',
+    ring: ''
+  },
+  at_risk: {
+    bar: 'bg-yellow-200',
+    progress: 'bg-yellow-500',
+    ring: ''
+  },
+  blocked: {
+    bar: 'bg-red-200',
+    progress: 'bg-red-500',
+    ring: 'ring-2 ring-inset ring-red-500'
+  }
+};
+
+
+const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartDate, dayWidth, onUpdateTask, onDayClick }) => {
     const [dragState, setDragState] = useState<{
         type: 'move' | 'resize-left' | 'resize-right';
         startX: number;
         originalTask: LookaheadTask;
     } | null>(null);
-
-    const isBlocked = Object.values(task.status).includes(ConstraintStatus.Overdue);
+    
+    const taskStatus = getTaskStatus(task);
+    const styles = statusStyles[taskStatus];
     const isCritical = !!task.isCriticalPath;
     const taskStart = parseLookaheadDate(task.startDate);
     const taskEnd = parseLookaheadDate(task.finishDate);
@@ -94,7 +128,7 @@ const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartD
     return (
         <div 
             className={`absolute top-1/2 -translate-y-1/2 group rounded-md overflow-visible
-                ${isCritical && !isBlocked ? 'border-t-4 border-b-4 border-red-700 box-content h-4' : 'h-6'}
+                ${isCritical && taskStatus !== 'blocked' ? 'border-t-4 border-b-4 border-red-700 box-content h-4' : 'h-2'}
                 ${dragState?.type === 'move' ? 'cursor-grabbing opacity-80 z-20' : 'cursor-grab z-10'}`}
             style={{ 
                 left: `${offsetDays * dayWidth}px`, 
@@ -104,15 +138,31 @@ const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartD
             title={`${task.name}: ${task.startDate} to ${task.finishDate}`}
         >
             <div 
-              className={`w-full h-full rounded-md ${isBlocked ? 'bg-red-200 ring-2 ring-inset ring-red-500' : 'bg-blue-200'}`}
+              className={`w-full h-full rounded-md ${styles.bar} ${styles.ring}`}
             >
                 <div 
-                    className="h-full rounded-md"
+                    className={`h-full rounded-md ${styles.progress}`}
                     style={{ 
                         width: `${displayProgressPercent}%`,
-                        backgroundColor: isBlocked ? '#f87171' : '#3b82f6' // red-400 or blue-500
                     }}
                 ></div>
+            </div>
+
+            <div className="absolute inset-0 flex">
+                {Array.from({ length: durationDays }).map((_, i) => {
+                    const dayDate = addDays(parseLookaheadDate(task.startDate), i);
+                    return (
+                        <div
+                            key={i}
+                            className="h-full border-r border-white/40 last:border-r-0 cursor-pointer hover:bg-black/10"
+                            style={{ width: `${dayWidth}px` }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDayClick(task, dayDate);
+                            }}
+                        />
+                    );
+                })}
             </div>
             
             {/* Resize Handles */}

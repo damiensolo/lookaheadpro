@@ -1,38 +1,39 @@
-
-
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { PLANNER_TASKS, MOCK_WEATHER } from './constants';
+// FIX: Add missing imports
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LookaheadTask, Constraint, ConstraintStatus, ConstraintType, WeatherForecast } from './types';
+import { PLANNER_TASKS, MOCK_WEATHER } from './constants';
+import { parseLookaheadDate, getDaysDiff, addDays, formatDateISO } from '../../../lib/dateUtils';
+import { ChevronDownIcon, ChevronRightIcon, DocumentIcon, SunIcon, CloudIcon, CloudRainIcon, FlameIcon } from '../../common/Icons';
 import ConstraintBadge from './components/ConstraintBadge';
 import ManHoursBar from './components/ManHoursBar';
-import LookaheadDetailsPanel from './components/LookaheadDetailsPanel';
-import SparklineChart from './components/SparklineChart';
 import DraggableTaskBar from './components/DraggableTaskBar';
-import { ChevronDownIcon, ChevronRightIcon, DocumentIcon, SunIcon, CloudIcon, CloudRainIcon } from '../../common/Icons';
-import { addDays, getDaysDiff, formatDateISO, parseLookaheadDate } from '../../../lib/dateUtils';
+import SparklineChart from './components/SparklineChart';
+import LookaheadDetailsPanel from './components/LookaheadDetailsPanel';
 
-const DAY_WIDTH = 48;
-const ROW_HEIGHT = 40;
-
-const WeatherIcon: React.FC<{ icon: WeatherForecast['icon'] }> = ({ icon }) => {
-    switch(icon) {
+// FIX: Add WeatherIcon component
+const WeatherIcon: React.FC<{ icon: 'sun' | 'cloud' | 'rain' }> = ({ icon }) => {
+    switch (icon) {
         case 'sun': return <SunIcon className="w-4 h-4 text-yellow-500" />;
         case 'cloud': return <CloudIcon className="w-4 h-4 text-gray-500" />;
         case 'rain': return <CloudRainIcon className="w-4 h-4 text-blue-500" />;
         default: return null;
     }
-}
+};
 
-type ColumnKeys = 'id' | 'name' | 'resource' | 'health' | 'manHours';
+// FIX: Define missing constants and types
+const DAY_WIDTH = 40;
+const ROW_HEIGHT = 48;
+
+type ColumnKeys = 'criticalPath' | 'id' | 'name' | 'resource' | 'health' | 'manHours';
 
 const columnConfig: Record<ColumnKeys, { minWidth: number }> = {
+    criticalPath: { minWidth: 30 },
     id: { minWidth: 40 },
     name: { minWidth: 150 },
     resource: { minWidth: 80 },
-    health: { minWidth: 140 },
-    manHours: { minWidth: 130 },
+    health: { minWidth: 120 },
+    manHours: { minWidth: 120 },
 };
-
 
 const LookaheadView: React.FC = () => {
     const [plannerTasks, setPlannerTasks] = useState<LookaheadTask[]>(PLANNER_TASKS);
@@ -53,6 +54,7 @@ const LookaheadView: React.FC = () => {
     }, []);
 
     const [columnWidths, setColumnWidths] = useState({
+        criticalPath: 40,
         id: 50,
         name: 250,
         resource: 100,
@@ -179,6 +181,10 @@ const LookaheadView: React.FC = () => {
         };
         setPlannerTasks(prev => updateRecursively(prev));
     }, []);
+    
+    const handleDayClick = useCallback((task: LookaheadTask, date: Date) => {
+        alert(`Task: ${task.name}\nDate: ${formatDateISO(date)}\n\nMore metadata could be shown here.`);
+    }, []);
 
     const weekHeaders: { label: string; days: number }[] = [];
     let currentDate = new Date(projectStartDate);
@@ -203,7 +209,10 @@ const LookaheadView: React.FC = () => {
                 <div key={task.id} className="flex border-b border-gray-200 first:border-t" style={{ height: `${ROW_HEIGHT}px`}}>
                     {/* Left Panel */}
                     <div className={`sticky left-0 bg-white z-30 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
-                        <div className="flex-shrink-0 flex items-center justify-center px-2 text-gray-500 text-sm overflow-hidden" style={{ width: `${columnWidths.id}px` }}>
+                        <div className="flex-shrink-0 flex items-center justify-center px-2 overflow-hidden" style={{ width: `${columnWidths.criticalPath}px` }}>
+                            {task.isCriticalPath && <FlameIcon className="w-5 h-5 text-red-600" title="This task is on the critical path." />}
+                        </div>
+                        <div className="flex-shrink-0 flex items-center justify-center px-2 text-gray-500 text-sm overflow-hidden border-l border-gray-200" style={{ width: `${columnWidths.id}px` }}>
                             {task.id}
                         </div>
                         <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200 overflow-hidden" style={{ width: `${columnWidths.name}px`, paddingLeft: `${8 + (level * 24)}px`}}>
@@ -236,6 +245,7 @@ const LookaheadView: React.FC = () => {
                             projectStartDate={projectStartDate}
                             dayWidth={DAY_WIDTH}
                             onUpdateTask={handleUpdateTaskDates}
+                            onDayClick={handleDayClick}
                         />
                     </div>
                 </div>
@@ -295,7 +305,11 @@ const LookaheadView: React.FC = () => {
                             </div>
                              <div className="flex" style={{ height: '50px' }}>
                                  <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
-                                    <div className="relative flex-shrink-0 px-2 flex items-end justify-center pb-1" style={{ width: `${columnWidths.id}px`}}>
+                                    <div className="relative flex-shrink-0 px-2 flex items-end justify-center pb-1" style={{ width: `${columnWidths.criticalPath}px`}}>
+                                        <FlameIcon className="w-4 h-4 text-gray-500" title="Critical Path" />
+                                        <Resizer onMouseDown={(e) => handleMouseDown(e, 'criticalPath')} />
+                                    </div>
+                                    <div className="relative flex-shrink-0 px-2 flex items-end justify-center pb-1 border-l border-gray-200" style={{ width: `${columnWidths.id}px`}}>
                                         ID
                                         <Resizer onMouseDown={(e) => handleMouseDown(e, 'id')} />
                                     </div>
@@ -356,5 +370,5 @@ const LookaheadView: React.FC = () => {
         </div>
     );
 };
-
+// FIX: Add default export
 export default LookaheadView;
