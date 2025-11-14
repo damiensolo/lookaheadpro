@@ -66,7 +66,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const [views, setViews] = useState<View[]>([initialView]);
   const [activeViewId, setActiveViewId] = useState<string>('default');
   const [defaultViewId, setDefaultViewId] = useState<string>('default');
-  const [activeViewMode, setActiveViewMode] = useState<'table' | 'board' | 'gantt' | 'lookahead'>('table');
+  const [activeViewMode, setActiveViewMode] = useState<'table' | 'board' | 'gantt' | 'lookahead'>('lookahead');
   
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
   const [editingCell, setEditingCell] = useState<{ taskId: number; column: string } | null>(null);

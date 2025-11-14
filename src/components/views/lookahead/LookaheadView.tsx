@@ -175,7 +175,7 @@ const LookaheadView: React.FC = () => {
             const row = (
                 <div key={task.id} className="flex border-b border-gray-200 first:border-t" style={{ height: `${ROW_HEIGHT}px`}}>
                     {/* Left Panel */}
-                    <div className="sticky left-0 bg-white border-r-2 border-gray-300 z-10 flex" style={{ width: `${totalLeftPanelWidth}px` }}>
+                    <div className="sticky left-0 bg-white z-10 flex" style={{ width: `${totalLeftPanelWidth}px` }}>
                         <div className="flex-shrink-0 flex items-center justify-center px-2 text-gray-500 text-sm overflow-hidden" style={{ width: `${columnWidths.id}px` }}>
                             {task.id}
                         </div>
@@ -203,7 +203,7 @@ const LookaheadView: React.FC = () => {
                          </div>
                     </div>
                     {/* Right Panel (Timeline) */}
-                    <div className="relative flex-grow flex">
+                    <div className="relative flex-grow flex pl-4 border-l-2 border-gray-200">
                         {Array.from({ length: totalDays }).map((_, i) => {
                             const date = addDays(projectStartDate, i);
                             const day = date.getDay();
@@ -212,7 +212,9 @@ const LookaheadView: React.FC = () => {
                                 <div key={i} className={`h-full border-r border-gray-100 ${isWeekend ? 'bg-gray-50' : ''}`} style={{ width: `${DAY_WIDTH}px`}}></div>
                             );
                         })}
-                        <div className={`absolute top-1/2 -translate-y-1/2 h-4 bg-gray-200 rounded-sm ${isCritical ? 'border-t-2 border-b-2 border-red-700' : ''}`}
+                        <div className={`absolute top-1/2 -translate-y-1/2 h-4 bg-gray-200 rounded-full overflow-hidden 
+                            ${isBlocked ? 'ring-1 ring-inset ring-red-600' : ''}
+                            ${isCritical && !isBlocked ? 'border-t-2 border-b-2 border-red-700' : ''}`}
                              style={{ left: `${offsetDays * DAY_WIDTH}px`, width: `${durationDays * DAY_WIDTH}px`}}
                         >
                             <div className="flex h-full">
@@ -240,7 +242,7 @@ const LookaheadView: React.FC = () => {
             {/* Dashboard Header */}
             <div className="p-4 border-b border-gray-200 flex-shrink-0">
                 <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">PPC Trend (Last 6 Weeks)</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Percent Plan Complete</h3>
                     <SparklineChart data={plannerTasks[0]?.ppcHistory || []} />
                 </div>
             </div>
@@ -252,15 +254,15 @@ const LookaheadView: React.FC = () => {
                         {/* Header */}
                         <div className="sticky top-0 bg-gray-50 z-20 text-xs font-semibold text-gray-600 uppercase border-b border-t border-gray-200">
                             <div className="flex border-b border-gray-200" style={{ height: '30px' }}>
-                                <div className="sticky left-0 bg-gray-50 flex border-r-2 border-gray-300" style={{ width: `${totalLeftPanelWidth}px` }}></div>
-                                <div className="flex-grow flex">
+                                <div className="sticky left-0 bg-gray-50 flex" style={{ width: `${totalLeftPanelWidth}px` }}></div>
+                                <div className="flex-grow flex pl-4 border-l-2 border-gray-200">
                                     {weekHeaders.map((week, i) => (
                                         <div key={i} className="flex items-center justify-center border-r border-gray-200" style={{ width: `${week.days * DAY_WIDTH}px`}}>{week.label}</div>
                                     ))}
                                 </div>
                             </div>
                              <div className="flex" style={{ height: '50px' }}>
-                                 <div className="sticky left-0 bg-gray-50 flex border-r-2 border-gray-300" style={{ width: `${totalLeftPanelWidth}px` }}>
+                                 <div className="sticky left-0 bg-gray-50 flex" style={{ width: `${totalLeftPanelWidth}px` }}>
                                     <div className="relative flex-shrink-0 px-2 flex items-end justify-center pb-1" style={{ width: `${columnWidths.id}px`}}>
                                         ID
                                         <Resizer onMouseDown={(e) => handleMouseDown(e, 'id')} />
@@ -282,7 +284,7 @@ const LookaheadView: React.FC = () => {
                                         <Resizer onMouseDown={(e) => handleMouseDown(e, 'manHours')} />
                                     </div>
                                  </div>
-                                 <div className="flex-grow flex">
+                                 <div className="flex-grow flex pl-4 border-l-2 border-gray-200">
                                     {Array.from({length: totalDays}).map((_, i) => {
                                         const date = addDays(projectStartDate, i);
                                         const dateString = formatDateISO(date);

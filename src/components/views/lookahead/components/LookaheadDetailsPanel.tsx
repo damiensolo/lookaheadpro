@@ -27,6 +27,20 @@ const getStatusDot = (status: ConstraintStatus) => {
   return <span className={`w-3 h-3 rounded-full ${color}`}></span>;
 };
 
+const getStatusClasses = (status: ConstraintStatus): { text: string; bg: string; } => {
+  switch (status) {
+    case ConstraintStatus.Complete:
+    case ConstraintStatus.OnSite:
+      return { text: 'text-green-800', bg: 'bg-green-100' };
+    case ConstraintStatus.Overdue:
+      return { text: 'text-red-800', bg: 'bg-red-100' };
+    case ConstraintStatus.Pending:
+      return { text: 'text-yellow-800', bg: 'bg-yellow-100' };
+    default:
+      return { text: 'text-gray-800', bg: 'bg-gray-100' };
+  }
+};
+
 const getOverallStatusInfo = (constraints: Constraint[]): { label: string; dotColor: string; textColor: string } => {
   if (constraints.some(c => c.status === ConstraintStatus.Overdue || c.severity === 'Blocking')) {
     return { label: 'Blocked', dotColor: 'bg-red-500', textColor: 'text-red-700' };
@@ -160,19 +174,29 @@ const LookaheadDetailsPanel: React.FC<LookaheadDetailsPanelProps> = ({ task, onC
             <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Make-Ready Checklist</h3>
                 <ul className="space-y-3">
-                  {task.constraints.length > 0 ? task.constraints.map((constraint, i) => (
-                    <li key={`${constraint.type}-${constraint.name}-${i}`} className="flex items-start gap-3">
-                      <div className="flex-shrink-0 pt-1">{getStatusDot(constraint.status)}</div>
-                      <div>
-                        <p className="font-medium text-gray-800">{constraint.type}: {constraint.name}</p>
-                        <p className="text-sm text-gray-500">
-                            Status: <span className="font-medium">{constraint.status} ({constraint.severity})</span>
-                            {constraint.link && <a href={constraint.link} target="_blank" rel="noopener noreferrer" className="ml-2 text-indigo-600 hover:underline">View</a>}
-                        </p>
-                        {constraint.flaggedBy && <p className="text-xs text-gray-400 mt-0.5">Flagged by {constraint.flaggedBy} on {constraint.timestamp}</p>}
-                      </div>
-                    </li>
-                  )) : (
+                  {task.constraints.length > 0 ? task.constraints.map((constraint, i) => {
+                    const statusClasses = getStatusClasses(constraint.status);
+                    return (
+                        <li key={`${constraint.type}-${constraint.name}-${i}`} className="flex items-start gap-3">
+                            <div className="flex-shrink-0 pt-1">{getStatusDot(constraint.status)}</div>
+                            <div className="flex-grow">
+                                <div className="flex items-center justify-between">
+                                    <p className="font-medium text-gray-800 mr-2">{constraint.type}: {constraint.name}</p>
+                                    {constraint.severity === 'Blocking' && (
+                                        <AlertTriangleIcon className="w-5 h-5 text-red-500 flex-shrink-0" title="Blocking constraint" />
+                                    )}
+                                </div>
+                                <div className="text-sm text-gray-500 mt-1 flex items-center gap-2 flex-wrap">
+                                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${statusClasses.bg} ${statusClasses.text}`}>
+                                        {constraint.status}
+                                    </span>
+                                    {constraint.link && <a href={constraint.link} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">View</a>}
+                                </div>
+                                {constraint.flaggedBy && <p className="text-xs text-gray-400 mt-1">Flagged by {constraint.flaggedBy} on {constraint.timestamp}</p>}
+                            </div>
+                        </li>
+                    )
+                  }) : (
                     <p className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-md">No constraints flagged.</p>
                   )}
                 </ul>
