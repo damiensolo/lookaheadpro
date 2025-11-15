@@ -58,6 +58,32 @@ export const PLANNER_TASKS: LookaheadTask[] = [
               { type: ConstraintType.Material, name: 'Windows', status: ConstraintStatus.OnSite, severity: 'Warning' },
             ],
             manHours: { actual: 30, budget: 80 },
+            dailyMetrics: [
+                {
+                    date: '2024-11-17',
+                    plan: { q: 10, h: 24, c: 3 },
+                    actual: { q: 12, h: 22, c: 3 },
+                    units: { q: 'windows', h: 'hrs', c: 'ppl' },
+                    progress: 25,
+                    progressStatus: 'Ahead',
+                },
+                {
+                    date: '2024-11-18',
+                    plan: { q: 10, h: 24, c: 3 },
+                    actual: { q: 8, h: 24, c: 3 },
+                    units: { q: 'windows', h: 'hrs', c: 'ppl' },
+                    progress: 45,
+                    progressStatus: 'Delayed',
+                },
+                {
+                    date: '2024-11-19',
+                    plan: { q: 10, h: 24, c: 3 },
+                    actual: { q: 10, h: 24, c: 3 },
+                    units: { q: 'windows', h: 'hrs', c: 'ppl' },
+                    progress: 70,
+                    progressStatus: 'On time',
+                },
+            ],
         },
     ]
   },
