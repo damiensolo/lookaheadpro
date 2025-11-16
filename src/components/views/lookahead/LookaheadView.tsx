@@ -21,7 +21,7 @@ const WeatherIcon: React.FC<{ icon: 'sun' | 'cloud' | 'rain' }> = ({ icon }) => 
 };
 
 // FIX: Define missing constants and types
-const DAY_WIDTH = 120;
+const DAY_WIDTH = 40;
 const ROW_HEIGHT = 48;
 
 type ColumnKeys = 'criticalPath' | 'id' | 'name' | 'resource' | 'health' | 'manHours';
@@ -258,11 +258,6 @@ const LookaheadView: React.FC = () => {
         <div onMouseDown={onMouseDown} className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-blue-300 z-20" />
     );
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayOffset = getDaysDiff(projectStartDate, today);
-    const isTodayVisible = today >= projectStartDate && today <= projectEndDate;
-
     return (
         <div className="flex h-full bg-white overflow-hidden relative flex-col">
             {/* Dashboard Header */}
@@ -368,15 +363,6 @@ const LookaheadView: React.FC = () => {
                         <div className="relative z-10">
                             {renderTaskRows(plannerTasks, 0)}
                         </div>
-
-                        {/* Today Marker */}
-                        {isTodayVisible && (
-                            <div 
-                                className="absolute top-0 bottom-0 w-0.5 bg-black z-30"
-                                style={{ left: `${totalLeftPanelWidth + (todayOffset * DAY_WIDTH)}px` }}
-                                title={`Today: ${today.toLocaleDateString()}`}
-                            />
-                        )}
                     </div>
                 </div>
                 <LookaheadDetailsPanel task={selectedTask} onClose={() => setSelectedTask(null)} onAddConstraint={handleAddConstraint} />

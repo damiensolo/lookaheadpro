@@ -40,27 +40,6 @@ export interface WeatherForecast {
     temp: number;
 }
 
-export interface DailyMetric {
-  date: string; // YYYY-MM-DD
-  plan: {
-    q: number;
-    h: number;
-    c: number;
-  };
-  actual: {
-    q: number;
-    h: number;
-    c: number;
-  };
-  units: {
-    q: string;
-    h: string;
-    c: string;
-  };
-  progress: number;
-  progressStatus: 'On time' | 'Delayed' | 'Ahead';
-}
-
 export interface LookaheadTask {
   id: string | number;
   name: string;
@@ -74,5 +53,4 @@ export interface LookaheadTask {
   isExpanded?: boolean;
   isCriticalPath?: boolean;
   ppcHistory?: number[];
-  dailyMetrics?: DailyMetric[];
 }
