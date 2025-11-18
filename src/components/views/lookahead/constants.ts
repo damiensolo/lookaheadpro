@@ -58,6 +58,26 @@ export const PLANNER_TASKS: LookaheadTask[] = [
               { type: ConstraintType.Material, name: 'Windows', status: ConstraintStatus.OnSite, severity: 'Warning' },
             ],
             manHours: { actual: 30, budget: 80 },
+            dailyMetrics: [
+                {
+                    date: '2024-11-17',
+                    quantity: { plan: 10, actual: 8, unit: 'windows' }, // less
+                    hours: { plan: 8, actual: 8 }, // same
+                    crew: { plan: 2, actual: 2 }, // same
+                },
+                {
+                    date: '2024-11-18',
+                    quantity: { plan: 10, actual: 12, unit: 'windows' }, // more
+                    hours: { plan: 8, actual: 9 }, // more
+                    crew: { plan: 2, actual: 3 }, // more
+                },
+                {
+                    date: '2024-11-19',
+                    quantity: { plan: 10, actual: 10, unit: 'windows' }, // same
+                    hours: { plan: 8, actual: 7 }, // less
+                    crew: { plan: 2, actual: 2 }, // same
+                },
+            ]
         },
     ]
   },

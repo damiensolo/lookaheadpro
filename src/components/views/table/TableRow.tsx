@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useRef } from 'react';
 import { Task, Status, Column, ColumnId, DisplayDensity } from '../../../types';
-import { ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../../common/Icons';
+import { EyeIcon, ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../../common/Icons';
 import { StatusDisplay, AssigneeAvatar, StatusSelector, ProgressDisplay } from '../../shared/TaskElements';
 import { formatDateForInput, formatDateFromInput } from '../../../lib/dateUtils';
 
@@ -140,13 +140,13 @@ const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell:
     };
 
     return isEditing ? (
-        <div className="flex items-center gap-1 w-full" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
            <input 
                type="date"
                value={formatDateForInput(task.startDate)}
                onChange={(e) => handleDateChange('startDate', e.target.value)}
                onBlur={() => onEdit(null)}
-               className="w-full bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-sm font-medium text-gray-600 h-7"
+               className="bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-sm font-medium text-gray-600 h-7"
            />
            <span className="text-gray-400">-</span>
             <input 
@@ -154,7 +154,7 @@ const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell:
                value={formatDateForInput(task.dueDate)}
                onChange={(e) => handleDateChange('dueDate', e.target.value)}
                onBlur={() => onEdit(null)}
-               className="w-full bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-sm font-medium text-gray-600 h-7"
+               className="bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-sm font-medium text-gray-600 h-7"
            />
         </div>
     ) : (
@@ -189,7 +189,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
                     className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                     aria-label={`View details for ${task.name}`}
                 >
-                    <ChevronRightIcon className="w-5 h-5" />
+                    <EyeIcon className="w-5 h-5" />
                 </button>
               );
           default:

@@ -1,12 +1,12 @@
 import { Column, Status, Priority, ColumnId, FilterOperator } from '../types';
 
 export const DEFAULT_COLUMNS: Column[] = [
+  { id: 'details', label: '', width: '60px', visible: true, minWidth: 60 },
   { id: 'name', label: 'Task Name', width: '300px', visible: true, minWidth: 200 },
   { id: 'status', label: 'Status', width: '150px', visible: true, minWidth: 120 },
   { id: 'assignee', label: 'Assignee', width: '150px', visible: true, minWidth: 120 },
   { id: 'dates', label: 'Dates', width: '220px', visible: true, minWidth: 180 },
   { id: 'progress', label: 'Progress', width: '200px', visible: true, minWidth: 150 },
-  { id: 'details', label: '', width: '60px', visible: true, minWidth: 60 },
 ];
 
 export const FILTERABLE_COLUMNS: { id: ColumnId, label: string, type: 'text' | 'enum' }[] = [
