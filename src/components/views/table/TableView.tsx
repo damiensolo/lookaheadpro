@@ -1,7 +1,9 @@
+
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Column, ColumnId, DisplayDensity } from '../../../types';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ColumnId, DisplayDensity } from '../../../types';
 import TableRow from './TableRow';
-import { ArrowDownIcon, ArrowUpIcon, SortIcon } from '../../common/Icons';
+import { ArrowDownIcon, ArrowUpIcon, SortIcon, ScissorsIcon, CopyIcon, TrashIcon, TypeIcon, EditIcon, ClipboardIcon } from '../../common/Icons';
 import { useProject } from '../../../context/ProjectContext';
 import { useProjectData } from '../../../hooks/useProjectData';
 
@@ -26,7 +28,6 @@ const getHeaderHeight = (density: DisplayDensity) => {
   }
 };
 
-
 const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   const { 
     tasks, 
@@ -46,7 +47,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
 
   const { columns, displayDensity, showGridLines, sort: sortConfig } = activeView;
 
-  const headerCheckboxRef = useRef<HTMLInputElement>(null);
+  const toolbarCheckboxRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLTableRowElement>(null);
   const activeResizerId = useRef<ColumnId | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{ id: ColumnId; position: 'left' | 'right' } | null>(null);
@@ -58,8 +59,8 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   const isSomeSelected = numSelected > 0 && numSelected < numVisible;
 
   useEffect(() => {
-    if (headerCheckboxRef.current) {
-      headerCheckboxRef.current.indeterminate = isSomeSelected;
+    if (toolbarCheckboxRef.current) {
+      toolbarCheckboxRef.current.indeterminate = isSomeSelected;
     }
   }, [isSomeSelected]);
 
@@ -171,87 +172,147 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
 
   const visibleColumns = columns.filter(c => c.visible);
   const headerHeightClass = getHeaderHeight(displayDensity);
+  const hasSelection = selectedTaskIds.size > 0;
 
   return (
     <div className="p-4 min-w-full inline-block align-middle">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <table className="w-full table-fixed text-sm text-left text-gray-500 whitespace-nowrap border-collapse">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-20">
-                <tr ref={headerRef}>
-                <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`}>
-                    <div className="flex items-center justify-center h-full">
-                    <input
-                        type="checkbox"
-                        ref={headerCheckboxRef}
-                        checked={isAllSelected}
-                        onChange={handleToggleAll}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col">
+            
+            {/* Contextual Toolbar Row */}
+            <div className="flex items-center h-16 border-b border-gray-200 bg-white flex-shrink-0 transition-all">
+                 <div className="w-14 flex justify-center flex-shrink-0 border-r border-transparent">
+                     <input 
+                        type="checkbox" 
+                        checked={isAllSelected} 
+                        onChange={handleToggleAll} 
+                        ref={toolbarCheckboxRef}
                         aria-label="Select all visible rows"
-                        aria-checked={isSomeSelected ? 'mixed' : (isAllSelected ? 'true' : 'false')}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    </div>
-                </th>
-                {visibleColumns.map((col, index) => {
-                    const isLastVisibleColumn = index === visibleColumns.length - 1;
-                    return (
-                    <th 
-                        key={col.id} 
-                        scope="col" 
-                        className={`${headerHeightClass} px-6 font-semibold border-b border-gray-200 relative group cursor-pointer align-middle ${showGridLines && !isLastVisibleColumn ? 'border-r border-gray-200' : ''}`}
-                        style={{ width: col.width, zIndex: 5 }}
-                        onClick={(e) => {
-                        if (col.id === 'details') return;
-                        if ((e.target as HTMLElement).closest('.absolute.top-0.right-0')) return;
-                        handleSort(col.id);
-                        }}
-                        draggable
-                        onDragStart={(e) => handleDragStartHeader(e, col.id)}
-                        onDragOver={(e) => handleDragOverHeader(e, col.id)}
-                        onDrop={(e) => handleDropHeader(e, col.id)}
-                        onDragLeave={() => setDropIndicator(null)}
-                    >
-                        {dropIndicator?.id === col.id && (
-                        <div className={`absolute top-0 h-full w-1 bg-blue-500 rounded-full ${dropIndicator.position === 'left' ? 'left-0' : 'right-0'}`} style={{ zIndex: 20 }} />
-                        )}
-                        <div className={`flex items-center gap-1 ${col.id === 'details' ? 'justify-center' : ''}`}>
-                        {col.label}
-                        {sortConfig?.columnId === col.id ? (
-                            sortConfig.direction === 'asc' ? 
-                            <ArrowUpIcon className="w-4 h-4 text-gray-600" /> : 
-                            <ArrowDownIcon className="w-4 h-4 text-gray-600" />
-                        ) : (
-                            col.id !== 'details' && <SortIcon className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                     />
+                 </div>
+                 <div className="flex-1 pl-4 flex items-center">
+                    <AnimatePresence mode="wait">
+                    {hasSelection ? (
+                        <motion.div 
+                            key="actions"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex items-center gap-4"
+                        >
+                            <div className="flex items-center gap-1 bg-white p-1.5 rounded-lg ">
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Cut">
+                                    <ScissorsIcon className="w-5 h-5" />
+                                </button>
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Copy">
+                                    <CopyIcon className="w-5 h-5" />
+                                </button>
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Paste">
+                                    <ClipboardIcon className="w-5 h-5" />
+                                </button>
+                                <button className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all shadow-sm border border-transparent hover:border-red-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-red-500" title="Delete">
+                                    <TrashIcon className="w-5 h-5" />
+                                </button>
+                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Rename">
+                                    <TypeIcon className="w-5 h-5" />
+                                </button>
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Edit">
+                                    <EditIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                                {selectedTaskIds.size} selected
+                            </span>
+                        </motion.div>
+                    ) : (
+                         <motion.div
+                            key="title"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-base font-medium text-gray-500"
+                         >
+                            Select items to perform actions
+                         </motion.div>
+                    )}
+                    </AnimatePresence>
+                 </div>
+            </div>
+
+            <div className="overflow-x-auto flex-1">
+                <table className="w-full table-fixed text-sm text-left text-gray-500 whitespace-nowrap border-collapse">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-20">
+                    <tr ref={headerRef}>
+                    <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`}>
+                        <div className="flex items-center justify-center h-full text-xs font-semibold text-gray-500">
+                            No.
                         </div>
-                        <Resizer onMouseDown={onMouseDown(col.id, col.minWidth)} />
                     </th>
-                    );
-                })}
-                <th scope="col" className={`${headerHeightClass} border-b border-gray-200 w-full`}></th>
-                </tr>
-            </thead>
-            <tbody>
-                {sortedTasks.map((task) => (
-                <TableRow 
-                    key={task.id} 
-                    task={task} 
-                    level={0} 
-                    columns={visibleColumns}
-                    onToggle={handleToggle} 
-                    rowNumberMap={rowNumberMap}
-                    selectedTaskIds={selectedTaskIds}
-                    onToggleRow={handleToggleRow}
-                    editingCell={editingCell}
-                    onEditCell={setEditingCell}
-                    onUpdateTask={handleUpdateTask}
-                    isScrolled={isScrolled}
-                    displayDensity={displayDensity}
-                    showGridLines={showGridLines}
-                    onShowDetails={setDetailedTaskId}
-                />
-                ))}
-            </tbody>
-            </table>
+                    {visibleColumns.map((col, index) => {
+                        const isLastVisibleColumn = index === visibleColumns.length - 1;
+                        return (
+                        <th 
+                            key={col.id} 
+                            scope="col" 
+                            className={`${headerHeightClass} px-6 font-semibold border-b border-gray-200 relative group cursor-pointer align-middle ${showGridLines && !isLastVisibleColumn ? 'border-r border-gray-200' : ''}`}
+                            style={{ width: col.width, zIndex: 5 }}
+                            onClick={(e) => {
+                            if (col.id === 'details') return;
+                            if ((e.target as HTMLElement).closest('.absolute.top-0.right-0')) return;
+                            handleSort(col.id);
+                            }}
+                            draggable
+                            onDragStart={(e) => handleDragStartHeader(e, col.id)}
+                            onDragOver={(e) => handleDragOverHeader(e, col.id)}
+                            onDrop={(e) => handleDropHeader(e, col.id)}
+                            onDragLeave={() => setDropIndicator(null)}
+                        >
+                            {dropIndicator?.id === col.id && (
+                            <div className={`absolute top-0 h-full w-1 bg-blue-500 rounded-full ${dropIndicator.position === 'left' ? 'left-0' : 'right-0'}`} style={{ zIndex: 20 }} />
+                            )}
+                            <div className={`flex items-center gap-1 ${col.id === 'details' ? 'justify-center' : ''}`}>
+                            {col.label}
+                            {sortConfig?.columnId === col.id ? (
+                                sortConfig.direction === 'asc' ? 
+                                <ArrowUpIcon className="w-4 h-4 text-gray-600" /> : 
+                                <ArrowDownIcon className="w-4 h-4 text-gray-600" />
+                            ) : (
+                                col.id !== 'details' && <SortIcon className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                            </div>
+                            <Resizer onMouseDown={onMouseDown(col.id, col.minWidth)} />
+                        </th>
+                        );
+                    })}
+                    <th scope="col" className={`${headerHeightClass} border-b border-gray-200 w-full`}></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {sortedTasks.map((task) => (
+                    <TableRow 
+                        key={task.id} 
+                        task={task} 
+                        level={0} 
+                        columns={visibleColumns}
+                        onToggle={handleToggle} 
+                        rowNumberMap={rowNumberMap}
+                        selectedTaskIds={selectedTaskIds}
+                        onToggleRow={handleToggleRow}
+                        editingCell={editingCell}
+                        onEditCell={setEditingCell}
+                        onUpdateTask={handleUpdateTask}
+                        isScrolled={isScrolled}
+                        displayDensity={displayDensity}
+                        showGridLines={showGridLines}
+                        onShowDetails={setDetailedTaskId}
+                    />
+                    ))}
+                </tbody>
+                </table>
+            </div>
         </div>
     </div>
   );

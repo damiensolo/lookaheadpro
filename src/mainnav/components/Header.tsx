@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HoverMenu, { CategoryData, StandardCategoryData, MoreItem } from './HoverMenu';
@@ -375,7 +376,7 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
     const activeColor = categoryColors[activeCategoryKey] || 'text-white';
 
     return (
-        <header className="bg-[#1e1e1e] text-white font-sans shadow-lg relative z-50">
+        <header className="bg-[#1e1e1e] text-white font-sans shadow-lg relative z-[100]">
             <div className="pl-2 pr-4 pt-3 pb-2 flex flex-col gap-y-2">
                 {/* Top Row for main navigation and actions */}
                 <div className="flex justify-between items-center">
