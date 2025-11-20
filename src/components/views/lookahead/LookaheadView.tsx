@@ -7,10 +7,11 @@ import { ChevronDownIcon, ChevronRightIcon, DocumentIcon, SunIcon, CloudIcon, Cl
 import ConstraintBadge from './components/ConstraintBadge';
 import ManHoursBar from './components/ManHoursBar';
 import DraggableTaskBar from './components/DraggableTaskBar';
-import SparklineChart from './components/SparklineChart';
 import LookaheadDetailsPanel from './components/LookaheadDetailsPanel';
 import DailyMetricsPanel from './components/DailyMetricsPanel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../common/ui/Tooltip';
+import { useProject } from '../../../context/ProjectContext';
+import { DisplayDensity } from '../../../types';
 
 const WeatherIcon: React.FC<{ icon: 'sun' | 'cloud' | 'rain' }> = ({ icon }) => {
     switch (icon) {
@@ -22,19 +23,31 @@ const WeatherIcon: React.FC<{ icon: 'sun' | 'cloud' | 'rain' }> = ({ icon }) => 
 };
 
 const DAY_WIDTH = 40;
-const ROW_HEIGHT = 48;
 
-type ColumnKeys = 'id' | 'name' | 'resource' | 'health' | 'manHours';
+const getRowHeight = (density: DisplayDensity) => {
+  switch (density) {
+    case 'compact': return 32;
+    case 'standard': return 38;
+    case 'comfortable': return 48;
+    default: return 38;
+  }
+};
 
-const columnConfig: Record<ColumnKeys, { minWidth: number }> = {
-    id: { minWidth: 50 },
-    name: { minWidth: 150 },
-    resource: { minWidth: 80 },
-    health: { minWidth: 120 },
-    manHours: { minWidth: 120 },
+// Mapping from Generic Column ID to Lookahead specific logic
+type LookaheadColumnType = 'id' | 'name' | 'resource' | 'health' | 'manHours';
+
+const COLUMN_MAPPING: Record<string, LookaheadColumnType> = {
+    details: 'id',
+    name: 'name',
+    assignee: 'resource',
+    status: 'health',
+    progress: 'manHours',
 };
 
 const LookaheadView: React.FC = () => {
+    const { activeView, setColumns } = useProject();
+    const { columns, displayDensity } = activeView;
+
     const [plannerTasks, setPlannerTasks] = useState<LookaheadTask[]>(PLANNER_TASKS);
     const [selectedTask, setSelectedTask] = useState<LookaheadTask | null>(null);
     const [selectedDay, setSelectedDay] = useState<{ task: LookaheadTask; date: Date } | null>(null);
@@ -53,30 +66,30 @@ const LookaheadView: React.FC = () => {
         return () => container?.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const [columnWidths, setColumnWidths] = useState({
-        id: 50,
-        name: 250,
-        resource: 100,
-        health: 175,
-        manHours: 175,
-    });
+    const visiblePanelColumns = useMemo(() => {
+        return columns
+            .filter(col => col.visible && COLUMN_MAPPING[col.id])
+            .map(col => ({
+                ...col,
+                lookaheadType: COLUMN_MAPPING[col.id]!,
+                widthPx: parseInt(col.width || '100', 10) || 100
+            }));
+    }, [columns]);
 
-    const handleMouseDown = useCallback((e: React.MouseEvent, columnId: ColumnKeys) => {
+    const totalLeftPanelWidth = useMemo(() => visiblePanelColumns.reduce((sum, col) => sum + col.widthPx, 0), [visiblePanelColumns]);
+    const rowHeight = getRowHeight(displayDensity);
+
+    const handleMouseDown = useCallback((e: React.MouseEvent, columnId: string, currentWidth: number) => {
         e.preventDefault();
 
         const startX = e.clientX;
-        const startWidth = columnWidths[columnId];
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
 
         const moveHandler = (moveEvent: MouseEvent) => {
             const deltaX = moveEvent.clientX - startX;
-            const minWidth = columnConfig[columnId].minWidth;
-            const newWidth = Math.max(startWidth + deltaX, minWidth);
-            setColumnWidths(prev => ({
-                ...prev,
-                [columnId]: newWidth,
-            }));
+            const newWidth = Math.max(currentWidth + deltaX, 40);
+             setColumns(prev => prev.map(c => c.id === columnId ? { ...c, width: `${newWidth}px` } : c));
         };
 
         const upHandler = () => {
@@ -88,9 +101,8 @@ const LookaheadView: React.FC = () => {
 
         window.addEventListener('mousemove', moveHandler);
         window.addEventListener('mouseup', upHandler);
-    }, [columnWidths]);
+    }, [setColumns]);
 
-    const totalLeftPanelWidth = useMemo(() => Object.values(columnWidths).reduce((sum, width) => sum + Number(width), 0), [columnWidths]);
 
     const { projectStartDate, projectEndDate, totalDays } = useMemo(() => {
         const allTasks: LookaheadTask[] = [];
@@ -208,56 +220,66 @@ const LookaheadView: React.FC = () => {
         weekHeaders.push({ label, days: daysInWeek });
         currentDate = addDays(currentDate, daysInWeek);
     }
+
+    const renderCell = (type: LookaheadColumnType, task: LookaheadTask, level: number) => {
+        switch (type) {
+            case 'id':
+                 return (
+                    <>
+                    {task.isCriticalPath && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-600" />}
+                    {task.isCriticalPath ? (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <div className="w-full h-full flex items-center justify-center cursor-help">
+                                        <span className="font-medium text-red-900">{task.id}</span>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="right"><p className="font-semibold">Critical Task</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ) : <span className="text-gray-500">{task.id}</span>}
+                    </>
+                 );
+            case 'name':
+                return (
+                    <div className="flex items-center w-full overflow-hidden" style={{ paddingLeft: `${8 + (level * 24)}px`}}>
+                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mr-1">
+                            {task.children ? (
+                                <button onClick={() => handleToggle(task.id)} className="text-gray-400 hover:text-gray-800">
+                                    {task.isExpanded ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />}
+                                </button>
+                            ) : <DocumentIcon className="w-4 h-4 text-gray-400"/>}
+                        </div>
+                        <span className="truncate font-medium text-gray-800 text-sm" title={task.name}>{task.name}</span>
+                    </div>
+                );
+            case 'resource':
+                return <span className="truncate" title={task.resource}>{task.resource}</span>;
+            case 'health':
+                return <ConstraintBadge status={task.status} onClick={() => handleConstraintBadgeClick(task)} />;
+            case 'manHours':
+                return <ManHoursBar manHours={task.manHours} />;
+            default:
+                return null;
+        }
+    };
     
     const renderTaskRows = (tasks: LookaheadTask[], level: number): React.ReactNode[] => {
         return tasks.flatMap(task => {
             const row = (
-                <div key={task.id} className="flex border-b border-gray-200 first:border-t" style={{ height: `${ROW_HEIGHT}px`}}>
+                <div key={task.id} className="flex border-b border-gray-200 first:border-t" style={{ height: `${rowHeight}px`}}>
                     {/* Left Panel */}
-                    <div className={`sticky left-0 bg-white z-30 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
-                        <div className={`flex-shrink-0 flex items-center justify-center px-2 text-sm overflow-hidden relative ${task.isCriticalPath ? 'bg-red-50' : ''}`} style={{ width: `${columnWidths.id}px` }}>
-                            {task.isCriticalPath && (
-                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-600" />
-                            )}
-                            {task.isCriticalPath ? (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <div className="w-full h-full flex items-center justify-center cursor-help">
-                                                <span className="font-medium text-red-900">{task.id}</span>
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="right">
-                                            <p className="font-semibold">Critical Task</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            ) : (
-                                <span className="text-gray-500">{task.id}</span>
-                            )}
-                        </div>
-                        <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200 overflow-hidden" style={{ width: `${columnWidths.name}px`, paddingLeft: `${8 + (level * 24)}px`}}>
-                           <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mr-1">
-                                {task.children ? (
-                                    <button
-                                        onClick={() => handleToggle(task.id)}
-                                        className="text-gray-400 hover:text-gray-800"
-                                    >
-                                        {task.isExpanded ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />}
-                                    </button>
-                                ) : (
-                                    <DocumentIcon className="w-4 h-4 text-gray-400"/>
-                                )}
-                            </div>
-                            <span className="truncate font-medium text-gray-800 text-sm">{task.name}</span>
-                        </div>
-                         <div className="flex-shrink-0 flex items-center px-2 truncate border-l border-gray-200 text-sm overflow-hidden" style={{ width: `${columnWidths.resource}px` }}>{task.resource}</div>
-                         <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200 overflow-hidden" style={{ width: `${columnWidths.health}px` }}>
-                             <ConstraintBadge status={task.status} onClick={() => handleConstraintBadgeClick(task)} />
-                         </div>
-                         <div className="flex-shrink-0 flex items-center px-2 border-l border-gray-200 overflow-hidden" style={{ width: `${columnWidths.manHours}px` }}>
-                            <ManHoursBar manHours={task.manHours} />
-                         </div>
+                    <div className={`sticky left-0 bg-white z-30 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
+                        {visiblePanelColumns.map((col, index) => (
+                             <div 
+                                key={col.id} 
+                                className={`flex-shrink-0 flex items-center px-2 text-sm overflow-hidden relative ${index > 0 ? 'border-l border-gray-200' : ''} ${col.lookaheadType === 'id' && task.isCriticalPath ? 'bg-red-50' : ''} ${col.lookaheadType === 'id' ? 'justify-center' : ''}`}
+                                style={{ width: `${col.widthPx}px` }}
+                            >
+                                {renderCell(col.lookaheadType, task, level)}
+                             </div>
+                        ))}
                     </div>
                     {/* Right Panel (Timeline) */}
                     <div className="relative flex-grow flex">
@@ -280,110 +302,94 @@ const LookaheadView: React.FC = () => {
     );
 
     return (
-        <div className="flex h-full bg-white overflow-hidden relative flex-col">
-            {/* Dashboard Header */}
-            <div className="p-4 border-b border-gray-200 flex-shrink-0">
-                <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Percent Plan Complete</h3>
-                    <SparklineChart data={plannerTasks[0]?.ppcHistory || []} />
-                </div>
-            </div>
-
-            {/* Main Planner */}
-            <div className="flex-grow overflow-hidden relative flex">
-                <div ref={scrollContainerRef} className="flex-grow overflow-auto min-w-0">
-                    <div className="relative" style={{ minWidth: `${totalLeftPanelWidth + (totalDays * DAY_WIDTH)}px`}}>
-                        {/* Unified Background Grid */}
-                        <div
-                            className="absolute top-0 left-0 w-full h-full pt-[80px] flex"
-                            style={{ zIndex: 0 }}
-                            aria-hidden="true"
-                        >
-                            <div style={{ width: `${totalLeftPanelWidth}px` }} className="flex-shrink-0 sticky left-0 bg-white z-10"></div>
+        <div className="flex h-full flex-col p-4">
+            <div className="flex-grow flex flex-col bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative">
+                {/* Main Planner */}
+                <div className="flex-grow overflow-hidden relative flex">
+                    <div ref={scrollContainerRef} className="flex-grow overflow-auto min-w-0">
+                        <div className="relative" style={{ minWidth: `${totalLeftPanelWidth + (totalDays * DAY_WIDTH)}px`}}>
+                            {/* Unified Background Grid */}
                             <div
-                                className="flex-grow grid"
-                                style={{ gridTemplateColumns: `repeat(${totalDays}, ${DAY_WIDTH}px)` }}
+                                className="absolute top-0 left-0 w-full h-full pt-[80px] flex"
+                                style={{ zIndex: 0 }}
+                                aria-hidden="true"
                             >
-                                {Array.from({ length: totalDays }).map((_, i) => {
-                                    const date = addDays(projectStartDate, i);
-                                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                                    return (
-                                        <div key={i} className={`h-full border-r border-gray-100 ${isWeekend ? 'bg-gray-50' : ''}`}></div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Header */}
-                        <div className="sticky top-0 bg-gray-50 z-40 text-xs font-semibold text-gray-600 uppercase border-b border-t border-gray-200">
-                            <div className="flex border-b border-gray-200" style={{ height: '30px' }}>
-                                <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}></div>
-                                <div className="flex-grow flex">
-                                    {weekHeaders.map((week, i) => (
-                                        <div key={i} className="flex items-center justify-center border-r border-gray-200" style={{ width: `${week.days * DAY_WIDTH}px`}}>{week.label}</div>
-                                    ))}
-                                </div>
-                            </div>
-                             <div className="flex" style={{ height: '50px' }}>
-                                 <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-md' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
-                                    <div className="relative flex-shrink-0 px-2 flex items-end justify-center pb-1" style={{ width: `${columnWidths.id}px`}}>
-                                        ID
-                                        <Resizer onMouseDown={(e) => handleMouseDown(e, 'id')} />
-                                    </div>
-                                    <div className="relative flex-shrink-0 px-2 flex items-end pb-1 border-l border-gray-200" style={{ width: `${columnWidths.name}px` }}>
-                                        Task Name
-                                        <Resizer onMouseDown={(e) => handleMouseDown(e, 'name')} />
-                                    </div>
-                                    <div className="relative flex-shrink-0 px-2 flex items-end pb-1 border-l border-gray-200" style={{ width: `${columnWidths.resource}px` }}>
-                                        Resource
-                                        <Resizer onMouseDown={(e) => handleMouseDown(e, 'resource')} />
-                                    </div>
-                                    <div className="relative flex-shrink-0 px-2 flex items-end pb-1 border-l border-gray-200" style={{ width: `${columnWidths.health}px` }}>
-                                        Constraint Health
-                                        <Resizer onMouseDown={(e) => handleMouseDown(e, 'health')} />
-                                    </div>
-                                    <div className="relative flex-shrink-0 px-2 flex items-end pb-1 border-l border-gray-200" style={{ width: `${columnWidths.manHours}px` }}>
-                                        Man-Hours
-                                        <Resizer onMouseDown={(e) => handleMouseDown(e, 'manHours')} />
-                                    </div>
-                                 </div>
-                                 <div
+                                <div style={{ width: `${totalLeftPanelWidth}px` }} className="flex-shrink-0 sticky left-0 bg-white z-10"></div>
+                                <div
                                     className="flex-grow grid"
                                     style={{ gridTemplateColumns: `repeat(${totalDays}, ${DAY_WIDTH}px)` }}
                                 >
-                                    {Array.from({length: totalDays}).map((_, i) => {
+                                    {Array.from({ length: totalDays }).map((_, i) => {
                                         const date = addDays(projectStartDate, i);
-                                        const dateString = formatDateISO(date);
-                                        const forecast = weatherByDate.get(dateString);
+                                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                                         return (
-                                            <div key={i} className="flex flex-col items-center justify-between py-1 border-r border-gray-200">
-                                                <div className="flex items-center">
-                                                    <span className="text-[10px] text-gray-400 mr-0.5">{date.toLocaleString('default', { weekday: 'short' })[0]}</span>
-                                                    <span className="font-normal">{date.getDate()}</span>
-                                                </div>
-                                                <div className="h-7 flex flex-col items-center justify-center">
-                                                    {forecast ? (
-                                                        <div className="flex flex-col items-center" title={`${forecast.temp}°F`}>
-                                                            <WeatherIcon icon={forecast.icon} />
-                                                            <span className="text-[10px] font-medium text-gray-600">{forecast.temp}°</span>
-                                                        </div>
-                                                    ) : <div style={{height: '28px'}}></div>}
-                                                </div>
-                                            </div>
-                                        )
+                                            <div key={i} className={`h-full border-r border-gray-100 ${isWeekend ? 'bg-gray-50' : ''}`}></div>
+                                        );
                                     })}
-                                 </div>
-                             </div>
-                        </div>
+                                </div>
+                            </div>
 
-                        {/* Body */}
-                        <div className="relative z-10">
-                            {renderTaskRows(plannerTasks, 0)}
+                            {/* Header */}
+                            <div className="sticky top-0 bg-gray-50 z-40 text-xs font-semibold text-gray-600 uppercase border-b border-t border-gray-200">
+                                <div className="flex border-b border-gray-200" style={{ height: '30px' }}>
+                                    <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}></div>
+                                    <div className="flex-grow flex">
+                                        {weekHeaders.map((week, i) => (
+                                            <div key={i} className="flex items-center justify-center border-r border-gray-200" style={{ width: `${week.days * DAY_WIDTH}px`}}>{week.label}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                                 <div className="flex" style={{ height: '50px' }}>
+                                     <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
+                                        {visiblePanelColumns.map((col, index) => (
+                                            <div 
+                                                key={col.id} 
+                                                className={`relative flex-shrink-0 px-2 flex items-end pb-1 ${index > 0 ? 'border-l border-gray-200' : ''} ${col.lookaheadType === 'id' ? 'justify-center' : ''}`}
+                                                style={{ width: `${col.widthPx}px` }}
+                                            >
+                                                {col.lookaheadType === 'id' ? 'ID' : col.label}
+                                                <Resizer onMouseDown={(e) => handleMouseDown(e, col.id, col.widthPx)} />
+                                            </div>
+                                        ))}
+                                     </div>
+                                     <div
+                                        className="flex-grow grid"
+                                        style={{ gridTemplateColumns: `repeat(${totalDays}, ${DAY_WIDTH}px)` }}
+                                    >
+                                        {Array.from({length: totalDays}).map((_, i) => {
+                                            const date = addDays(projectStartDate, i);
+                                            const dateString = formatDateISO(date);
+                                            const forecast = weatherByDate.get(dateString);
+                                            return (
+                                                <div key={i} className="flex flex-col items-center justify-between py-1 border-r border-gray-200">
+                                                    <div className="flex items-center">
+                                                        <span className="text-[10px] text-gray-400 mr-0.5">{date.toLocaleString('default', { weekday: 'short' })[0]}</span>
+                                                        <span className="font-normal">{date.getDate()}</span>
+                                                    </div>
+                                                    <div className="h-7 flex flex-col items-center justify-center">
+                                                        {forecast ? (
+                                                            <div className="flex flex-col items-center" title={`${forecast.temp}°F`}>
+                                                                <WeatherIcon icon={forecast.icon} />
+                                                                <span className="text-[10px] font-medium text-gray-600">{forecast.temp}°</span>
+                                                            </div>
+                                                        ) : <div style={{height: '28px'}}></div>}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                     </div>
+                                 </div>
+                            </div>
+
+                            {/* Body */}
+                            <div className="relative z-10">
+                                {renderTaskRows(plannerTasks, 0)}
+                            </div>
                         </div>
                     </div>
+                    <LookaheadDetailsPanel task={selectedTask} onClose={() => setSelectedTask(null)} onAddConstraint={handleAddConstraint} />
+                    <DailyMetricsPanel data={selectedDay} onClose={() => setSelectedDay(null)} />
                 </div>
-                <LookaheadDetailsPanel task={selectedTask} onClose={() => setSelectedTask(null)} onAddConstraint={handleAddConstraint} />
-                <DailyMetricsPanel data={selectedDay} onClose={() => setSelectedDay(null)} />
             </div>
         </div>
     );

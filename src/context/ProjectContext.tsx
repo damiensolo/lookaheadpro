@@ -61,7 +61,7 @@ interface ProjectContextType {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-export const ProjectProvider = ({ children }: { children: ReactNode }) => {
+export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
   const [views, setViews] = useState<View[]>([initialView]);
   const [activeViewId, setActiveViewId] = useState<string>('default');

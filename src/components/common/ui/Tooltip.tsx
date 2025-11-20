@@ -8,11 +8,11 @@ const TooltipContext = createContext<{
   triggerRef: React.RefObject<HTMLElement>;
 } | null>(null);
 
-export const TooltipProvider = ({ children }: { children: React.ReactNode }) => {
+export const TooltipProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
-export const Tooltip = ({ children }: { children: React.ReactNode }) => {
+export const Tooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isVisible, setIsVisible] = useState(false);
   const triggerRef = useRef<HTMLElement>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -35,7 +35,7 @@ export const Tooltip = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const TooltipTrigger = ({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) => {
+export const TooltipTrigger: React.FC<{ children: React.ReactNode; asChild?: boolean }> = ({ children, asChild }) => {
   const context = useContext(TooltipContext);
   if (!context) throw new Error("TooltipTrigger must be used within a Tooltip");
 
@@ -63,7 +63,7 @@ interface TooltipContentProps {
     align?: 'start' | 'center' | 'end';
 }
 
-export const TooltipContent = ({ children, className = '', side = 'top', align = 'center' }: TooltipContentProps) => {
+export const TooltipContent: React.FC<TooltipContentProps> = ({ children, className = '', side = 'top', align = 'center' }) => {
   const context = useContext(TooltipContext);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   
