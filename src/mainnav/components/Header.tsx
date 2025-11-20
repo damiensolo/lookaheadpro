@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HoverMenu, { CategoryData, StandardCategoryData, MoreItem } from './HoverMenu';
@@ -285,7 +284,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({ projects, selectedPro
                         animate={{ opacity: 1, y: 5 }}
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute z-50 w-max min-w-full mt-1 bg-[#2a2a2a] border border-gray-600 rounded-md shadow-lg"
+                        className="absolute z-[100] w-max min-w-full mt-1 bg-[#2a2a2a] border border-gray-600 rounded-md shadow-lg"
                     >
                         <ul className="p-1" role="listbox">
                             {projects.map(project => (
@@ -334,6 +333,10 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
     const [activeCategoryKey, setActiveCategoryKey] = useState<StandardCategoryKey>('documentation');
     const [activeSubcategoryKey, setActiveSubcategoryKey] = useState<string>('document');
     const [selectedProject, setSelectedProject] = useState<Project>(projects[0]);
+    
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const menuTriggerRef = useRef<HTMLDivElement>(null);
+    const timeoutRef = useRef<number | null>(null);
 
     const categoryColors: { [key: string]: string } = {
         projectManagement: 'text-orange-500',
@@ -365,6 +368,25 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
         setSelectedProject(project);
     };
 
+    const handleMouseEnter = () => {
+        if (timeoutRef.current) {
+            window.clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+        if (menuTriggerRef.current) {
+            const rect = menuTriggerRef.current.getBoundingClientRect();
+            setMenuPos({ top: rect.bottom, left: rect.left });
+        }
+        setMenuVisible(true);
+    };
+
+    const handleMouseLeave = () => {
+        if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = window.setTimeout(() => {
+            setMenuVisible(false);
+        }, 150);
+    };
+
     const activeCategory = navigationData[activeCategoryKey];
 
     // FIX: Add a type guard to ensure activeCategory is of type StandardCategoryData.
@@ -383,18 +405,22 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
                     {/* Left & Center Nav Items */}
                     <div className="flex items-center gap-x-4">
                         <div 
+                            ref={menuTriggerRef}
                             className="relative h-12 w-[72px] pr-1 flex justify-center items-center"
-                            onMouseEnter={() => setMenuVisible(true)}
-                            onMouseLeave={() => setMenuVisible(false)}
+                            onMouseEnter={handleMouseEnter}
+                            onMouseLeave={handleMouseLeave}
                         >
                             {activeCategory.mainIcon}
-                            <div className="absolute top-full h-4 w-full" />
                             <AnimatePresence>
                                 {isMenuVisible && 
                                     <HoverMenu 
                                         navigationData={navigationData}
                                         menuLayout={menuLayout}
                                         onSelect={handleSelect}
+                                        top={menuPos.top}
+                                        left={menuPos.left}
+                                        onMouseEnter={handleMouseEnter}
+                                        onMouseLeave={handleMouseLeave}
                                     />
                                 }
                             </AnimatePresence>

@@ -270,7 +270,7 @@ const LookaheadView: React.FC = () => {
             const row = (
                 <div key={task.id} className="flex border-b border-gray-200 first:border-t" style={{ height: `${rowHeight}px`}}>
                     {/* Left Panel */}
-                    <div className={`sticky left-0 bg-white z-30 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
+                    <div className={`sticky left-0 bg-white z-30 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
                         {visiblePanelColumns.map((col, index) => (
                              <div 
                                 key={col.id} 
@@ -332,7 +332,7 @@ const LookaheadView: React.FC = () => {
                             {/* Header */}
                             <div className="sticky top-0 bg-gray-50 z-40 text-xs font-semibold text-gray-600 uppercase border-b border-t border-gray-200">
                                 <div className="flex border-b border-gray-200" style={{ height: '30px' }}>
-                                    <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}></div>
+                                    <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}></div>
                                     <div className="flex-grow flex">
                                         {weekHeaders.map((week, i) => (
                                             <div key={i} className="flex items-center justify-center border-r border-gray-200" style={{ width: `${week.days * DAY_WIDTH}px`}}>{week.label}</div>
@@ -340,7 +340,7 @@ const LookaheadView: React.FC = () => {
                                     </div>
                                 </div>
                                  <div className="flex" style={{ height: '50px' }}>
-                                     <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
+                                     <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}>
                                         {visiblePanelColumns.map((col, index) => (
                                             <div 
                                                 key={col.id} 

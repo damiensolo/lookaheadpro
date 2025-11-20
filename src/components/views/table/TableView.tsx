@@ -179,15 +179,15 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col">
             
             {/* Contextual Toolbar Row */}
-            <div className="flex items-center h-16 border-b border-gray-200 bg-white flex-shrink-0 transition-all">
-                 <div className="w-14 flex justify-center flex-shrink-0 border-r border-transparent">
+            <div className="flex items-center h-16 border-b border-gray-200 bg-white flex-shrink-0 transition-all z-40 relative">
+                 <div className="w-14 flex items-center justify-center flex-shrink-0">
                      <input 
                         type="checkbox" 
                         checked={isAllSelected} 
                         onChange={handleToggleAll} 
                         ref={toolbarCheckboxRef}
                         aria-label="Select all visible rows"
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                      />
                  </div>
                  <div className="flex-1 pl-4 flex items-center">
@@ -201,7 +201,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                             transition={{ duration: 0.2 }}
                             className="flex items-center gap-4"
                         >
-                            <div className="flex items-center gap-1 bg-white p-1.5 rounded-lg ">
+                            <div className="flex items-center gap-1 p-1.5 rounded-lg">
                                 <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Cut">
                                     <ScissorsIcon className="w-5 h-5" />
                                 </button>
@@ -246,7 +246,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                 <table className="w-full table-fixed text-sm text-left text-gray-500 whitespace-nowrap border-collapse">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-20">
                     <tr ref={headerRef}>
-                    <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`}>
+                    <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`}>
                         <div className="flex items-center justify-center h-full text-xs font-semibold text-gray-500">
                             No.
                         </div>

@@ -1,4 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+
+import React, { useRef, useEffect, useState, useCallback, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Assignee, Status, Priority, Impact, Progress } from '../../types';
 import { ChevronDownIcon, ArrowUpIcon, ArrowDownIcon, MoreHorizontalIcon } from '../common/Icons';
 
@@ -39,13 +41,16 @@ const statusDotStyles: Record<Status, string> = {
   [Status.New]: 'bg-sky-500',
 };
 
-export const StatusDisplay: React.FC<{ status: Status }> = ({ status }) => {
+export const StatusDisplay: React.FC<{ status: Status; showChevron?: boolean }> = ({ status, showChevron }) => {
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 w-full" title={status}>
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 w-full" title={status}>
       <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyles[status]} flex-shrink-0`}></span>
       <div className="min-w-0">
         <p className="text-gray-600 font-medium truncate">{status}</p>
       </div>
+      {showChevron && (
+        <ChevronDownIcon className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+      )}
     </div>
   );
 };
@@ -54,57 +59,111 @@ export const StatusSelector: React.FC<{
   currentStatus: Status;
   onChange: (newStatus: Status) => void;
   onBlur: () => void;
-}> = ({ currentStatus, onChange, onBlur }) => {
+  defaultOpen?: boolean;
+}> = ({ currentStatus, onChange, onBlur, defaultOpen = false }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const updateCoords = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  }, []);
+
+  // Use useLayoutEffect to ensure coords are set before paint when defaultOpen is true
+  useLayoutEffect(() => {
+    if (isOpen) {
+        updateCoords();
+    }
+  }, [isOpen, updateCoords]);
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is inside container
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        onBlur();
+         setIsOpen(false);
+         onBlur();
       }
     };
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-    }, 0);
 
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
+    const handleScroll = () => {
+        if (isOpen) updateCoords();
     };
-  }, [onBlur]);
+    const handleResize = () => {
+        if (isOpen) updateCoords();
+    };
+    
+    if (isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', handleScroll, true); // Capture scroll events
+        window.addEventListener('resize', handleResize);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isOpen, onBlur, updateCoords]);
+
+  const handleToggle = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsOpen(prev => !prev);
+  }
 
   const handleSelect = (status: Status) => {
     onChange(status);
+    setIsOpen(false);
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-full" onClick={(e) => e.stopPropagation()}>
-      <div className="w-full h-full flex items-center justify-between">
-        <div className="flex items-center gap-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyles[currentStatus]}`}></span>
-            <span className="text-gray-800 font-medium">{currentStatus}</span>
+    <>
+    <div 
+        ref={containerRef} 
+        className="relative w-full h-full group cursor-pointer" 
+        onClick={handleToggle}
+    >
+      <div className="w-full h-full grid grid-cols-[auto_1fr_auto] items-center gap-x-2 rounded transition-colors">
+        <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyles[currentStatus]} flex-shrink-0`}></span>
+        <div className="min-w-0">
+             <p className="text-gray-600 font-medium truncate text-left">{currentStatus}</p>
         </div>
-        <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+        <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
       </div>
+    </div>
+    {isOpen && createPortal(
       <ul
-        className="absolute top-full left-0 mt-1 w-full min-w-max bg-white rounded-md shadow-lg border border-gray-200 z-50 overflow-hidden"
+        className="fixed bg-white rounded-md shadow-lg border border-gray-200 z-[9999] overflow-hidden"
+        style={{ 
+            top: coords.top + 4, // Add a little gap
+            left: coords.left, 
+            width: Math.max(coords.width, 160) // Ensure minimum width
+        }}
+        onMouseDown={(e) => e.stopPropagation()} 
       >
         {Object.values(Status).map((s) => (
           <li
             key={s}
-            onMouseDown={() => handleSelect(s)}
+            onMouseDown={(e) => { e.stopPropagation(); handleSelect(s); }}
             className={`px-3 py-1.5 text-sm cursor-pointer flex items-center gap-2 ${
               s === currentStatus 
                 ? 'bg-indigo-600 text-white' 
                 : 'text-gray-800 hover:bg-indigo-500 hover:text-white'
             }`}
           >
-            <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyles[s]}`}></span>
+            <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyles[s]} border border-white/20`}></span>
             <span>{s}</span>
           </li>
         ))}
-      </ul>
-    </div>
+      </ul>,
+      document.body
+    )}
+    </>
   );
 };
 
@@ -120,9 +179,22 @@ export const PrioritySelector: React.FC<{
   taskId: number;
   currentPriority?: Priority;
   onPriorityChange: (taskId: number, newPriority: Priority) => void;
-}> = ({ taskId, currentPriority = Priority.None, onPriorityChange }) => {
+  hideLabel?: boolean;
+}> = ({ taskId, currentPriority = Priority.None, onPriorityChange, hideLabel = false }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const updateCoords = useCallback(() => {
+      if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          setCoords({
+              top: rect.bottom,
+              left: rect.left,
+              width: rect.width
+          });
+      }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -130,13 +202,34 @@ export const PrioritySelector: React.FC<{
         setIsOpen(false);
       }
     };
+    const handleScroll = () => {
+        if (isOpen) updateCoords();
+    };
+    const handleResize = () => {
+        if (isOpen) updateCoords();
+    };
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
-  }, [isOpen]);
+  }, [isOpen, updateCoords]);
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isOpen && containerRef.current) {
+        updateCoords();
+        setIsOpen(true);
+    } else {
+        setIsOpen(false);
+    }
+  };
 
   const handleSelect = (priority: Priority) => {
     onPriorityChange(taskId, priority);
@@ -146,21 +239,38 @@ export const PrioritySelector: React.FC<{
   const { icon: CurrentPriorityIcon, color: currentPriorityColor, name: currentPriorityName } = priorityStyles[currentPriority] || priorityStyles[Priority.None];
 
   return (
-    <div ref={containerRef} className="relative w-full h-full" onClick={(e) => { e.stopPropagation(); setIsOpen(p => !p); }}>
-      <div className="w-full h-full flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-gray-100">
-        <CurrentPriorityIcon className={`w-4 h-4 ${currentPriorityColor}`} />
-        <span className="text-gray-800 font-medium">{currentPriorityName}</span>
+    <>
+    <div 
+        ref={containerRef} 
+        className="relative w-full h-full group cursor-pointer" 
+        onClick={handleToggle}
+    >
+      <div className={`w-full h-full flex items-center ${hideLabel ? 'justify-center' : 'justify-between'} gap-2 p-1 rounded hover:bg-gray-100 transition-colors`}>
+        <div className="flex items-center gap-2">
+            <CurrentPriorityIcon className={`w-4 h-4 ${currentPriorityColor}`} />
+            {!hideLabel && <span className="text-gray-800 font-medium">{currentPriorityName}</span>}
+        </div>
+        {!hideLabel && (
+             <ChevronDownIcon className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+        )}
       </div>
-      {isOpen && (
+    </div>
+    {isOpen && createPortal(
       <ul
-        className="absolute top-full left-0 mt-1 w-full min-w-max bg-white rounded-md shadow-lg border border-gray-200 z-50 overflow-hidden"
+        className="fixed bg-white rounded-md shadow-lg border border-gray-200 z-[9999] overflow-hidden"
+        style={{ 
+            top: coords.top + 4, 
+            left: coords.left, 
+            width: Math.max(coords.width, hideLabel ? 120 : 140) 
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {Object.values(Priority).map((p) => {
           const { icon: Icon, color, name } = priorityStyles[p];
           return (
             <li
               key={p}
-              onMouseDown={() => handleSelect(p)}
+              onMouseDown={(e) => { e.stopPropagation(); handleSelect(p); }}
               className={`px-3 py-1.5 text-sm cursor-pointer flex items-center gap-2 ${
                 p === currentPriority
                   ? 'bg-indigo-600 text-white'
@@ -172,9 +282,10 @@ export const PrioritySelector: React.FC<{
             </li>
           );
         })}
-      </ul>
-      )}
-    </div>
+      </ul>,
+      document.body
+    )}
+    </>
   );
 };
 

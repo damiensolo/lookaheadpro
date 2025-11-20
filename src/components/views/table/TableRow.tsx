@@ -1,3 +1,4 @@
+
 import React, { Fragment, useEffect, useRef } from 'react';
 import { Task, Status, Column, ColumnId, DisplayDensity } from '../../../types';
 import { EyeIcon, ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../../common/Icons';
@@ -120,9 +121,10 @@ const StatusCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cel
             currentStatus={task.status} 
             onChange={handleStatusChange} 
             onBlur={() => onEdit(null)}
+            defaultOpen={true}
         />
     ) : (
-        <StatusDisplay status={task.status} />
+        <StatusDisplay status={task.status} showChevron={true} />
     );
 };
 
@@ -226,13 +228,13 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
             if (isEditable) {
                 if (isEditing) {
                     cellClasses = cellClasses.replace('border-b border-gray-200', 'border-b-transparent');
-                    cellClasses += ' outline-blue-600 outline outline-2 -outline-offset-2';
+                    cellClasses += ' outline-blue-600 outline outline-2 -outline-offset-2 bg-white';
                 } else {
                     cellClasses += ' hover:outline-blue-400 hover:outline hover:outline-1 hover:-outline-offset-1';
                 }
             }
 
-            let wrapperClass = "flex items-center h-full w-full";
+            let wrapperClass = "flex items-center h-full w-full group"; // Add group for hover effects inside cell
             if (col.id === 'details') {
                 wrapperClass += " justify-center";
             } else {
