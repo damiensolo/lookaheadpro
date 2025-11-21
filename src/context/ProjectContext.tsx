@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useMemo, useCallback, useContext, SetStateAction, ReactNode } from 'react';
 import { MOCK_TASKS } from '../data';
 import { Task, View, FilterRule, Priority, ColumnId, Status, DisplayDensity, Column } from '../types';
@@ -14,7 +15,7 @@ const initialView: View = {
   filters: [],
   sort: null,
   columns: DEFAULT_COLUMNS,
-  displayDensity: 'compact',
+  displayDensity: 'comfortable',
   showGridLines: true,
 };
 
@@ -66,7 +67,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [views, setViews] = useState<View[]>([initialView]);
   const [activeViewId, setActiveViewId] = useState<string>('default');
   const [defaultViewId, setDefaultViewId] = useState<string>('default');
-  const [activeViewMode, setActiveViewMode] = useState<'table' | 'board' | 'gantt' | 'lookahead'>('lookahead');
+  const [activeViewMode, setActiveViewMode] = useState<'table' | 'board' | 'gantt' | 'lookahead'>('table');
   
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
   const [editingCell, setEditingCell] = useState<{ taskId: number; column: string } | null>(null);

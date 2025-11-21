@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { View } from '../../types';
 import { PlusIcon, MoreHorizontalIcon, TableIcon, BoardIcon, GanttIcon, LookaheadIcon } from '../common/Icons';
 
@@ -14,48 +15,96 @@ const modes: { id: ViewMode; label: string; icon: React.FC<React.SVGProps<SVGSVG
 const TabMenu: React.FC<{ view: View, isDefault: boolean, onRename: () => void, onDelete: () => void, onSetDefault: () => void, canDelete: boolean }> = 
 ({ view, isDefault, onRename, onDelete, onSetDefault, canDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const menuWrapperRef = useRef<HTMLDivElement>(null);
-  const [positionClass, setPositionClass] = useState('left-0');
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
 
-  useEffect(() => {
-    if (isOpen && menuWrapperRef.current) {
-      const rect = menuWrapperRef.current.getBoundingClientRect();
-      // w-40 is 10rem = 160px. Add a buffer for scrollbars etc.
-      if (rect.left + 160 > window.innerWidth) {
-        setPositionClass('right-0');
-      } else {
-        setPositionClass('left-0');
+  useLayoutEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const MENU_WIDTH = 160; // w-40 is 10rem = 160px
+      let left = rect.left;
+      
+      // Align right if it goes off screen
+      if (left + MENU_WIDTH > window.innerWidth) {
+        left = rect.right - MENU_WIDTH;
       }
+      
+      setCoords({
+        top: rect.bottom + 4,
+        left: left
+      });
     }
-    
+  }, [isOpen]);
+  
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuWrapperRef.current && !menuWrapperRef.current.contains(event.target as Node)) {
+      if (
+        buttonRef.current && !buttonRef.current.contains(event.target as Node) &&
+        menuRef.current && !menuRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
-    if(isOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    
+    const handleScroll = () => { if(isOpen) setIsOpen(false); };
+
+    if(isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', handleScroll, true);
+        window.addEventListener('resize', handleScroll);
+    }
+    return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleScroll);
+    };
   }, [isOpen]);
 
 
   return (
-    <div ref={menuWrapperRef} className="relative">
-      <button onClick={() => setIsOpen(prev => !prev)} className="p-1 rounded-md hover:bg-gray-200">
+    <>
+      <button 
+        ref={buttonRef}
+        onClick={(e) => { e.stopPropagation(); setIsOpen(prev => !prev); }} 
+        className="p-1 rounded-md hover:bg-gray-200 focus:outline-none"
+      >
         <MoreHorizontalIcon className="w-4 h-4 text-gray-500" />
       </button>
-      {isOpen && (
-        <div className={`absolute top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-30 ${positionClass}`}>
+      {isOpen && createPortal(
+        <div 
+            ref={menuRef}
+            className="fixed w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[9999]"
+            style={{ top: coords.top, left: coords.left }}
+            onClick={(e) => e.stopPropagation()}
+        >
           <ul className="py-1">
-            <li className="px-3 py-1.5 text-sm text-gray-700">
-              {isDefault ? 'Default view' : 'Set as default'}
-              {!isDefault && <button onClick={() => { onSetDefault(); setIsOpen(false); }} className="absolute inset-0 w-full h-full"></button>}
+            <li className="px-1">
+                <button 
+                    onClick={() => { if(!isDefault) onSetDefault(); setIsOpen(false); }} 
+                    disabled={isDefault}
+                    className={`w-full text-left px-2 py-1.5 text-sm rounded-md flex items-center ${isDefault ? 'text-gray-400 cursor-default' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                    {isDefault ? 'Default view' : 'Set as default'}
+                </button>
             </li>
-            <li className="relative px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"><button onClick={() => { onRename(); setIsOpen(false); }} className="absolute inset-0 w-full h-full text-left px-3"></button>Rename</li>
-            {canDelete && <li className="relative px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"><button onClick={() => { onDelete(); setIsOpen(false); }} className="absolute inset-0 w-full h-full text-left px-3"></button>Delete</li>}
+            <li className="px-1">
+                <button onClick={() => { onRename(); setIsOpen(false); }} className="w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                    Rename
+                </button>
+            </li>
+            {canDelete && (
+                <li className="px-1">
+                    <button onClick={() => { onDelete(); setIsOpen(false); }} className="w-full text-left px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                        Delete
+                    </button>
+                </li>
+            )}
           </ul>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 };
 

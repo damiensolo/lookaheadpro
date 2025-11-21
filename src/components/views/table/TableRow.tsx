@@ -3,7 +3,9 @@ import React, { Fragment, useEffect, useRef } from 'react';
 import { Task, Status, Column, ColumnId, DisplayDensity } from '../../../types';
 import { EyeIcon, ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../../common/Icons';
 import { StatusDisplay, AssigneeAvatar, StatusSelector, ProgressDisplay } from '../../shared/TaskElements';
-import { formatDateForInput, formatDateFromInput } from '../../../lib/dateUtils';
+import { formatDateForInput, formatDateFromInput, parseDate } from '../../../lib/dateUtils';
+import { DatePicker } from '../../common/ui/DatePicker';
+import { format } from 'date-fns';
 
 interface TableRowProps {
   task: Task;
@@ -135,35 +137,32 @@ const AssigneeCellContent: React.FC<{ task: Task }> = ({ task }) => (
 );
 
 const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell: { taskId: number; column: string } | null) => void, onUpdateTask: TableRowProps['onUpdateTask'] }> = ({ task, isEditing, onEdit, onUpdateTask }) => {
-    const handleDateChange = (field: 'startDate' | 'dueDate', value: string) => {
-        if (value) {
-            onUpdateTask(task.id, { [field]: formatDateFromInput(value) });
+    const handleDateChange = (date: Date | undefined) => {
+        if (date) {
+             // Format Date back to DD/MM/YYYY for storage
+             const day = String(date.getDate()).padStart(2, '0');
+             const month = String(date.getMonth() + 1).padStart(2, '0');
+             const year = date.getFullYear();
+             onUpdateTask(task.id, { startDate: `${day}/${month}/${year}` });
         }
     };
 
-    return isEditing ? (
-        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-           <input 
-               type="date"
-               value={formatDateForInput(task.startDate)}
-               onChange={(e) => handleDateChange('startDate', e.target.value)}
-               onBlur={() => onEdit(null)}
-               className="bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-sm font-medium text-gray-600 h-7"
-           />
-           <span className="text-gray-400">-</span>
-            <input 
-               type="date"
-               value={formatDateForInput(task.dueDate)}
-               onChange={(e) => handleDateChange('dueDate', e.target.value)}
-               onBlur={() => onEdit(null)}
-               className="bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-sm font-medium text-gray-600 h-7"
-           />
+    const parsedDate = task.startDate ? parseDate(task.startDate) : undefined;
+
+    return (
+        <div onClick={e => e.stopPropagation()} className="w-full">
+             <DatePicker 
+                date={parsedDate} 
+                setDate={handleDateChange}
+                open={isEditing}
+                onOpenChange={(isOpen) => {
+                    if (isOpen) onEdit({ taskId: task.id, column: 'dates' });
+                    else onEdit(null);
+                }}
+                className="text-gray-800 font-medium"
+             />
         </div>
-    ) : (
-       <div className="truncate font-medium text-gray-600 min-w-0" title={`${task.startDate} - ${task.dueDate}`}>
-           {`${task.startDate} - ${task.dueDate}`}
-       </div>
-   );
+    );
 };
 
 const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap, selectedTaskIds, onToggleRow, editingCell, onEditCell, onUpdateTask, columns, isScrolled, displayDensity, showGridLines, onShowDetails }) => {
@@ -234,7 +233,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
                 }
             }
 
-            let wrapperClass = "flex items-center h-full w-full group"; // Add group for hover effects inside cell
+            let wrapperClass = "flex items-center h-full w-full group"; 
             if (col.id === 'details') {
                 wrapperClass += " justify-center";
             } else {

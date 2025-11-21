@@ -11,12 +11,20 @@ interface TableViewProps {
   isScrolled: boolean;
 }
 
-const Resizer: React.FC<{ onMouseDown: (e: React.MouseEvent) => void }> = ({ onMouseDown }) => (
+const Resizer: React.FC<{ onMouseDown: (e: React.MouseEvent) => void; isActive: boolean }> = ({ onMouseDown, isActive }) => (
   <div
     onMouseDown={onMouseDown}
-    className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-blue-400 group-hover:bg-blue-400"
-    style={{ zIndex: 10 }}
-  />
+    onClick={(e) => e.stopPropagation()}
+    className="absolute top-0 right-0 h-full w-6 cursor-col-resize flex justify-center items-center z-10"
+  >
+    <div 
+      className={`h-full w-1 rounded-full transition-colors duration-150 ${
+        isActive 
+          ? 'bg-blue-600' 
+          : 'bg-transparent group-hover:bg-blue-300'
+      }`} 
+    />
+  </div>
 );
 
 const getHeaderHeight = (density: DisplayDensity) => {
@@ -47,9 +55,10 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
 
   const { columns, displayDensity, showGridLines, sort: sortConfig } = activeView;
 
-  const toolbarCheckboxRef = useRef<HTMLInputElement>(null);
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLTableRowElement>(null);
   const activeResizerId = useRef<ColumnId | null>(null);
+  const [resizingColumnId, setResizingColumnId] = useState<ColumnId | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{ id: ColumnId; position: 'left' | 'right' } | null>(null);
 
   const numVisible = visibleTaskIds.length;
@@ -59,8 +68,8 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   const isSomeSelected = numSelected > 0 && numSelected < numVisible;
 
   useEffect(() => {
-    if (toolbarCheckboxRef.current) {
-      toolbarCheckboxRef.current.indeterminate = isSomeSelected;
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = isSomeSelected;
     }
   }, [isSomeSelected]);
 
@@ -88,8 +97,9 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   const onMouseDown = (columnId: ColumnId, minWidth: number | undefined) => (e: React.MouseEvent) => {
     e.preventDefault();
     activeResizerId.current = columnId;
+    setResizingColumnId(columnId);
     
-    const thElement = (e.target as HTMLElement).parentElement;
+    const thElement = (e.target as HTMLElement).parentElement?.parentElement;
     if (!thElement) return;
 
     const startPos = e.clientX;
@@ -105,6 +115,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
 
     const onMouseUp = () => {
       activeResizerId.current = null;
+      setResizingColumnId(null);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
       document.body.classList.remove('grabbing');
@@ -179,18 +190,8 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col">
             
             {/* Contextual Toolbar Row */}
-            <div className="flex items-center h-16 border-b border-gray-200 bg-white flex-shrink-0 transition-all z-40 relative">
-                 <div className="w-14 flex items-center justify-center flex-shrink-0">
-                     <input 
-                        type="checkbox" 
-                        checked={isAllSelected} 
-                        onChange={handleToggleAll} 
-                        ref={toolbarCheckboxRef}
-                        aria-label="Select all visible rows"
-                        className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                     />
-                 </div>
-                 <div className="flex-1 pl-4 flex items-center">
+            <div className="flex items-center h-14 border-b border-gray-200 bg-white flex-shrink-0 transition-all z-40 relative px-4">
+                 <div className="flex-1 flex items-center">
                     <AnimatePresence mode="wait">
                     {hasSelection ? (
                         <motion.div 
@@ -246,9 +247,19 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                 <table className="w-full table-fixed text-sm text-left text-gray-500 whitespace-nowrap border-collapse">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-20">
                     <tr ref={headerRef}>
-                    <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`}>
-                        <div className="flex items-center justify-center h-full text-xs font-semibold text-gray-500">
-                            No.
+                    <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 group ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`}>
+                        <div className="flex items-center justify-center h-full">
+                             <span className={`text-xs font-semibold text-gray-500 ${isAllSelected || isSomeSelected ? 'hidden' : 'group-hover:hidden'}`}>
+                                ID
+                             </span>
+                             <input 
+                                type="checkbox" 
+                                checked={isAllSelected} 
+                                onChange={handleToggleAll} 
+                                ref={headerCheckboxRef}
+                                aria-label="Select all visible rows"
+                                className={`h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer ${isAllSelected || isSomeSelected ? 'block' : 'hidden group-hover:block'}`}
+                             />
                         </div>
                     </th>
                     {visibleColumns.map((col, index) => {
@@ -273,17 +284,17 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                             {dropIndicator?.id === col.id && (
                             <div className={`absolute top-0 h-full w-1 bg-blue-500 rounded-full ${dropIndicator.position === 'left' ? 'left-0' : 'right-0'}`} style={{ zIndex: 20 }} />
                             )}
-                            <div className={`flex items-center gap-1 ${col.id === 'details' ? 'justify-center' : ''}`}>
-                            {col.label}
+                            <div className={`flex items-center gap-1 ${col.id === 'details' ? 'justify-center' : ''} overflow-hidden`}>
+                            <span className="truncate">{col.label}</span>
                             {sortConfig?.columnId === col.id ? (
                                 sortConfig.direction === 'asc' ? 
-                                <ArrowUpIcon className="w-4 h-4 text-gray-600" /> : 
-                                <ArrowDownIcon className="w-4 h-4 text-gray-600" />
+                                <ArrowUpIcon className="w-4 h-4 text-gray-600 flex-shrink-0" /> : 
+                                <ArrowDownIcon className="w-4 h-4 text-gray-600 flex-shrink-0" />
                             ) : (
-                                col.id !== 'details' && <SortIcon className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                col.id !== 'details' && <SortIcon className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                             )}
                             </div>
-                            <Resizer onMouseDown={onMouseDown(col.id, col.minWidth)} />
+                            <Resizer onMouseDown={onMouseDown(col.id, col.minWidth)} isActive={resizingColumnId === col.id} />
                         </th>
                         );
                     })}
