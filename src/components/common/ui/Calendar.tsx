@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { 
   format, 
   addMonths, 
-  subMonths, 
-  startOfMonth, 
   endOfMonth, 
-  startOfWeek, 
   endOfWeek, 
   eachDayOfInterval, 
   isSameMonth, 
@@ -22,6 +19,22 @@ interface CalendarProps {
   className?: string;
 }
 
+const startOfMonth = (date: Date) => {
+  const d = new Date(date);
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const startOfWeek = (date: Date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day;
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 export const Calendar: React.FC<CalendarProps> = ({
   mode = 'single',
   selected,
@@ -30,7 +43,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const [currentMonth, setCurrentMonth] = useState(selected || new Date());
 
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const prevMonth = () => setCurrentMonth(addMonths(currentMonth, -1));
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   const monthStart = startOfMonth(currentMonth);

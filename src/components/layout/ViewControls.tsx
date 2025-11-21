@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { View } from '../../types';
-import { PlusIcon, MoreHorizontalIcon, TableIcon, BoardIcon, GanttIcon, LookaheadIcon } from '../common/Icons';
+import { useProject } from '../../context/ProjectContext';
+import FilterMenu from './FilterMenu';
+import { PlusIcon, MoreHorizontalIcon, TableIcon, BoardIcon, GanttIcon, LookaheadIcon, SearchIcon, FilterIcon } from '../common/Icons';
 
 export type ViewMode = 'table' | 'board' | 'gantt' | 'lookahead';
 
@@ -108,24 +110,13 @@ const TabMenu: React.FC<{ view: View, isDefault: boolean, onRename: () => void, 
   );
 };
 
-interface ViewControlsProps {
-  views: View[];
-  activeViewId: string;
-  defaultViewId: string | null;
-  onSelectView: (id: string) => void;
-  onCreateView: () => void;
-  onRenameView: (view: View) => void;
-  onDeleteView: (id: string) => void;
-  onSetDefaultView: (id: string) => void;
-  onReorderViews: (views: View[]) => void;
-  activeMode: ViewMode;
-  onModeChange: (mode: ViewMode) => void;
-}
+const ViewControls: React.FC = () => {
+  const {
+    views, activeViewId, defaultViewId, setActiveViewId, setModalState, handleDeleteView, setDefaultViewId, setViews,
+    activeViewMode, setActiveViewMode,
+    searchTerm, setSearchTerm, showFilterMenu, setShowFilterMenu, activeView
+  } = useProject();
 
-const ViewControls: React.FC<ViewControlsProps> = ({
-  views, activeViewId, defaultViewId, onSelectView, onCreateView, onRenameView, onDeleteView, onSetDefaultView, onReorderViews,
-  activeMode, onModeChange
-}) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
@@ -148,75 +139,102 @@ const ViewControls: React.FC<ViewControlsProps> = ({
     const newViews = [...views];
     const [draggedItem] = newViews.splice(draggedIndex, 1);
     newViews.splice(index, 0, draggedItem);
-    onReorderViews(newViews);
+    setViews(newViews);
     
     setDraggedIndex(null);
     setDropIndex(null);
   };
 
   return (
-    <div className="flex items-center bg-gray-100 rounded-lg p-1">
-      <nav className="flex items-center gap-1" onDragLeave={() => setDropIndex(null)}>
-        {views.map((view, index) => {
-          const isActive = view.id === activeViewId;
-          const isDropTarget = dropIndex === index;
-          const isBeingDragged = draggedIndex === index;
+    <div className="flex items-center gap-3">
+        {/* Search */}
+        <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+                type="text" 
+                placeholder="Search tasks..." 
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 w-48 shadow-sm"
+            />
+        </div>
 
-          return (
-            <div
-              key={view.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={() => { setDraggedIndex(null); setDropIndex(null); }}
-              className={`flex items-center rounded-md transition-all duration-150 ${ isBeingDragged ? 'opacity-50' : '' } ${ isDropTarget ? 'bg-gray-300' : '' } ${ isActive ? 'bg-white shadow-sm border border-gray-200' : 'hover:bg-gray-200'}`}
-            >
-              <button
-                onClick={() => onSelectView(view.id)}
-                className={`px-3 py-1.5 text-sm font-medium text-gray-800 rounded-l-md`}
-              >
-                {view.name}
-              </button>
-              <div className="pr-1">
-                 <TabMenu 
-                  view={view}
-                  isDefault={view.id === defaultViewId}
-                  onRename={() => onRenameView(view)}
-                  onDelete={() => onDeleteView(view.id)}
-                  onSetDefault={() => onSetDefaultView(view.id)}
-                  canDelete={views.length > 1}
-                 />
-              </div>
-            </div>
-          );
-        })}
-      </nav>
-      <button onClick={onCreateView} className="ml-1 p-1.5 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800">
-        <PlusIcon className="w-4 h-4" />
-      </button>
-
-      <div className="h-6 w-px bg-gray-300 mx-2"></div>
-
-      <div className="flex items-center">
-        {modes.map(({ id, label, icon: Icon }) => {
-          const isActive = activeMode === id;
-          return (
-            <button
-              key={id}
-              title={label}
-              onClick={() => onModeChange(id)}
-              className={`p-2 text-sm font-medium rounded-md transition-colors ${
-                isActive ? 'bg-white shadow-sm border border-gray-200 text-gray-800' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'
-              }`}
-              aria-label={`Switch to ${label} view`}
-              aria-pressed={isActive}
-            >
-              <Icon className="w-5 h-5" />
+        {/* Filter */}
+        <div className="relative">
+            <button onClick={() => setShowFilterMenu(p => !p)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm">
+                <FilterIcon className="w-4 h-4" />
+                <span>Filter</span>
+                {activeView.filters.length > 0 && <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-1.5 py-0.5 rounded-full">{activeView.filters.length}</span>}
             </button>
-          );
-        })}
-      </div>
+            {showFilterMenu && <FilterMenu onClose={() => setShowFilterMenu(false)} />}
+        </div>
+
+        <div className="h-6 w-px bg-gray-300 mx-1"></div>
+
+        {/* View Controls */}
+        <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 shadow-sm">
+            <nav className="flex items-center gap-1" onDragLeave={() => setDropIndex(null)}>
+                {views.map((view, index) => {
+                const isActive = view.id === activeViewId;
+                const isDropTarget = dropIndex === index;
+                const isBeingDragged = draggedIndex === index;
+
+                return (
+                    <div
+                    key={view.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={() => { setDraggedIndex(null); setDropIndex(null); }}
+                    className={`flex items-center rounded-md transition-all duration-150 ${ isBeingDragged ? 'opacity-50' : '' } ${ isDropTarget ? 'bg-gray-300' : '' } ${ isActive ? 'bg-white shadow-sm border border-gray-200' : 'hover:bg-gray-200'}`}
+                    >
+                    <button
+                        onClick={() => setActiveViewId(view.id)}
+                        className={`px-3 py-1.5 text-sm font-medium text-gray-800 rounded-l-md`}
+                    >
+                        {view.name}
+                    </button>
+                    <div className="pr-1">
+                        <TabMenu 
+                        view={view}
+                        isDefault={view.id === defaultViewId}
+                        onRename={() => setModalState({ type: 'rename', view })}
+                        onDelete={() => handleDeleteView(view.id)}
+                        onSetDefault={() => setDefaultViewId(view.id)}
+                        canDelete={views.length > 1}
+                        />
+                    </div>
+                    </div>
+                );
+                })}
+            </nav>
+            <button onClick={() => setModalState({ type: 'create' })} className="ml-1 p-1.5 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800">
+                <PlusIcon className="w-4 h-4" />
+            </button>
+
+            <div className="h-6 w-px bg-gray-300 mx-2"></div>
+
+            <div className="flex items-center">
+                {modes.map(({ id, label, icon: Icon }) => {
+                const isActive = activeViewMode === id;
+                return (
+                    <button
+                    key={id}
+                    title={label}
+                    onClick={() => setActiveViewMode(id)}
+                    className={`p-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive ? 'bg-white shadow-sm border border-gray-200 text-gray-800' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+                    }`}
+                    aria-label={`Switch to ${label} view`}
+                    aria-pressed={isActive}
+                    >
+                    <Icon className="w-5 h-5" />
+                    </button>
+                );
+                })}
+            </div>
+        </div>
     </div>
   );
 };

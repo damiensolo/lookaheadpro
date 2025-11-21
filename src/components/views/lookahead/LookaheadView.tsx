@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LookaheadTask, Constraint, ConstraintStatus, ConstraintType, WeatherForecast } from './types';
 import { PLANNER_TASKS, MOCK_WEATHER } from './constants';
@@ -12,6 +11,7 @@ import DailyMetricsPanel from './components/DailyMetricsPanel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../common/ui/Tooltip';
 import { useProject } from '../../../context/ProjectContext';
 import { DisplayDensity } from '../../../types';
+import ViewControls from '../../layout/ViewControls';
 
 const WeatherIcon: React.FC<{ icon: 'sun' | 'cloud' | 'rain' }> = ({ icon }) => {
     switch (icon) {
@@ -45,7 +45,9 @@ const COLUMN_MAPPING: Record<string, LookaheadColumnType> = {
 };
 
 const LookaheadView: React.FC = () => {
-    const { activeView, setColumns } = useProject();
+    const { 
+        activeView, setColumns
+    } = useProject();
     const { columns, displayDensity } = activeView;
 
     const [plannerTasks, setPlannerTasks] = useState<LookaheadTask[]>(PLANNER_TASKS);
@@ -302,7 +304,9 @@ const LookaheadView: React.FC = () => {
     );
 
     return (
-        <div className="flex h-full flex-col p-4">
+        <div className="flex h-full flex-col p-4 gap-4">
+            <ViewControls />
+            
             <div className="flex-grow flex flex-col bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative">
                 {/* Main Planner */}
                 <div className="flex-grow overflow-hidden relative flex">

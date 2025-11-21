@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ColumnId, DisplayDensity } from '../../../types';
@@ -6,6 +5,7 @@ import TableRow from './TableRow';
 import { ArrowDownIcon, ArrowUpIcon, SortIcon, ScissorsIcon, CopyIcon, TrashIcon, TypeIcon, EditIcon, ClipboardIcon } from '../../common/Icons';
 import { useProject } from '../../../context/ProjectContext';
 import { useProjectData } from '../../../hooks/useProjectData';
+import ViewControls from '../../layout/ViewControls';
 
 interface TableViewProps {
   isScrolled: boolean;
@@ -41,7 +41,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
     handleUpdateTask,
     setDetailedTaskId,
     handleSort,
-    setColumns
+    setColumns,
   } = useProject();
   const { sortedTasks, visibleTaskIds, rowNumberMap } = useProjectData(tasks, activeView, searchTerm);
 
@@ -178,21 +178,23 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   const hasSelection = selectedTaskIds.size > 0;
 
   return (
-    <div className="p-4 min-w-full inline-block align-middle">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col">
+    <div className="flex flex-col h-full p-4 gap-4">
+        <ViewControls />
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col flex-grow">
             
             {/* Contextual Toolbar Row */}
             <div className="flex items-center h-14 border-b border-gray-200 bg-white flex-shrink-0 transition-all z-40 relative">
-                 <div className="w-14 flex items-center justify-center flex-shrink-0">
+                 <div className="w-14 flex items-center justify-center flex-shrink-0 border-r border-gray-200">
                      <input 
                         type="checkbox" 
                         checked={isAllSelected} 
                         onChange={handleToggleAll} 
                         ref={toolbarCheckboxRef}
                         aria-label="Select all visible rows"
-                        className="h-4 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                      />
                  </div>
+
                  <div className="flex-1 pl-4 flex items-center">
                     <AnimatePresence mode="wait">
                     {hasSelection ? (

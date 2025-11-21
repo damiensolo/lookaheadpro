@@ -4,9 +4,12 @@ import GanttRow from './GanttRow';
 import { parseDate, getDaysDiff, addDays } from '../../../lib/dateUtils';
 import { useProject } from '../../../context/ProjectContext';
 import { useProjectData } from '../../../hooks/useProjectData';
+import ViewControls from '../../layout/ViewControls';
 
 const GanttView: React.FC = () => {
-    const { tasks, activeView, searchTerm, handleToggle, handlePriorityChange } = useProject();
+    const { 
+        tasks, activeView, searchTerm, handleToggle, handlePriorityChange
+    } = useProject();
     const { sortedTasks } = useProjectData(tasks, activeView, searchTerm);
 
     const flatten = (tasks: Task[]): Task[] => tasks.reduce((acc, task) => {
@@ -17,7 +20,12 @@ const GanttView: React.FC = () => {
     
     const allTasks = flatten(sortedTasks);
 
-    if (allTasks.length === 0) return <div className="p-4">No tasks to display.</div>;
+    if (allTasks.length === 0) return (
+        <div className="h-full flex flex-col p-4 gap-4">
+            <ViewControls />
+            <div className="p-4">No tasks to display.</div>
+        </div>
+    );
 
     const projectStartDate = allTasks.reduce((min, task) => {
         const d = parseDate(task.startDate);
@@ -49,7 +57,9 @@ const GanttView: React.FC = () => {
     }
 
     return (
-        <div className="h-full flex flex-col p-4">
+        <div className="h-full flex flex-col p-4 gap-4">
+            <ViewControls />
+
             <div className="flex-grow bg-white border border-gray-200 rounded-lg shadow-sm overflow-auto relative">
                 <div className="relative" style={{ minWidth: `${totalDays * dayWidth + taskListWidth}px` }}>
                     <div className="sticky top-0 bg-gray-50 z-10 border-b border-gray-200">
