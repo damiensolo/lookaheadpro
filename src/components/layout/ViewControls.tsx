@@ -15,87 +15,87 @@ const modes: { id: ViewMode; label: string; icon: React.FC<React.SVGProps<SVGSVG
 const TabMenu: React.FC<{ view: View, isDefault: boolean, onRename: () => void, onDelete: () => void, onSetDefault: () => void, canDelete: boolean }> = 
 ({ view, isDefault, onRename, onDelete, onSetDefault, canDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const menuWrapperRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const MENU_WIDTH = 160; // w-40 is 10rem = 160px
+    if (isOpen && menuWrapperRef.current) {
+      const rect = menuWrapperRef.current.getBoundingClientRect();
+      const MENU_WIDTH = 160; // w-40 matches the width below
       let left = rect.left;
       
-      // Align right if it goes off screen
+      // Check right edge collision
       if (left + MENU_WIDTH > window.innerWidth) {
         left = rect.right - MENU_WIDTH;
       }
-      
+
       setCoords({
-        top: rect.bottom + 4,
-        left: left
+        top: rect.bottom + 4, // Small gap
+        left: left,
       });
     }
   }, [isOpen]);
-  
+    
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        buttonRef.current && !buttonRef.current.contains(event.target as Node) &&
-        menuRef.current && !menuRef.current.contains(event.target as Node)
-      ) {
+      // If click is not on the button (wrapper), close. 
+      // Note: clicks inside the portal are handled by stopPropagation on the portal div
+      if (menuWrapperRef.current && !menuWrapperRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    
-    const handleScroll = () => { if(isOpen) setIsOpen(false); };
 
-    if(isOpen) {
-        document.addEventListener('mousedown', handleClickOutside);
-        window.addEventListener('scroll', handleScroll, true);
-        window.addEventListener('resize', handleScroll);
+    const handleScroll = () => setIsOpen(false);
+    const handleResize = () => setIsOpen(false);
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
     }
     return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        window.removeEventListener('scroll', handleScroll, true);
-        window.removeEventListener('resize', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
   }, [isOpen]);
 
 
   return (
-    <>
-      <button 
-        ref={buttonRef}
-        onClick={(e) => { e.stopPropagation(); setIsOpen(prev => !prev); }} 
-        className="p-1 rounded-md hover:bg-gray-200 focus:outline-none"
-      >
+    <div ref={menuWrapperRef} className="relative">
+      <button onClick={() => setIsOpen(prev => !prev)} className="p-1 rounded-md hover:bg-gray-200">
         <MoreHorizontalIcon className="w-4 h-4 text-gray-500" />
       </button>
       {isOpen && createPortal(
         <div 
-            ref={menuRef}
             className="fixed w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[9999]"
             style={{ top: coords.top, left: coords.left }}
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
         >
           <ul className="py-1">
-            <li className="px-1">
+            <li>
                 <button 
-                    onClick={() => { if(!isDefault) onSetDefault(); setIsOpen(false); }} 
+                    onClick={() => { if(!isDefault) { onSetDefault(); setIsOpen(false); } }}
                     disabled={isDefault}
-                    className={`w-full text-left px-2 py-1.5 text-sm rounded-md flex items-center ${isDefault ? 'text-gray-400 cursor-default' : 'text-gray-700 hover:bg-gray-100'}`}
+                    className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${isDefault ? 'text-gray-400 cursor-default' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                     {isDefault ? 'Default view' : 'Set as default'}
                 </button>
             </li>
-            <li className="px-1">
-                <button onClick={() => { onRename(); setIsOpen(false); }} className="w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+            <li>
+                <button 
+                    onClick={() => { onRename(); setIsOpen(false); }} 
+                    className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
                     Rename
                 </button>
             </li>
             {canDelete && (
-                <li className="px-1">
-                    <button onClick={() => { onDelete(); setIsOpen(false); }} className="w-full text-left px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                <li>
+                    <button 
+                        onClick={() => { onDelete(); setIsOpen(false); }} 
+                        className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
                         Delete
                     </button>
                 </li>
@@ -104,7 +104,7 @@ const TabMenu: React.FC<{ view: View, isDefault: boolean, onRename: () => void, 
         </div>,
         document.body
       )}
-    </>
+    </div>
   );
 };
 
