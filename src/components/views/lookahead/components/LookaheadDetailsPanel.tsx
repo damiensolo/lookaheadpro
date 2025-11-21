@@ -75,10 +75,10 @@ const AddConstraintForm: React.FC<{ onAdd: (constraint: Constraint) => void, onC
             <h4 className="text-sm font-semibold text-gray-700 mb-3">Flag New Constraint</h4>
             <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                    <select value={type} onChange={e => setType(e.target.value as ConstraintType)} className="form-select w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                    <select value={type} onChange={e => setType(e.target.value as ConstraintType)} className="form-select w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
                         {Object.values(ConstraintType).map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
-                    <select value={severity} onChange={e => setSeverity(e.target.value as 'Blocking' | 'Warning')} className="form-select w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                    <select value={severity} onChange={e => setSeverity(e.target.value as 'Blocking' | 'Warning')} className="form-select w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
                         <option value="Warning">Warning</option>
                         <option value="Blocking">Blocking</option>
                     </select>
@@ -87,7 +87,7 @@ const AddConstraintForm: React.FC<{ onAdd: (constraint: Constraint) => void, onC
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     placeholder="Description (e.g., Material delivery delayed)"
-                    className="form-textarea w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    className="form-textarea w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     rows={2}
                 />
             </div>
@@ -190,7 +190,7 @@ const LookaheadDetailsPanel: React.FC<LookaheadDetailsPanelProps> = ({ task, onC
                                     <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${statusClasses.bg} ${statusClasses.text}`}>
                                         {constraint.status}
                                     </span>
-                                    {constraint.link && <a href={constraint.link} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">View</a>}
+                                    {constraint.link && <a href={constraint.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View</a>}
                                 </div>
                                 {constraint.flaggedBy && <p className="text-xs text-gray-400 mt-1">Flagged by {constraint.flaggedBy} on {constraint.timestamp}</p>}
                             </div>
@@ -204,7 +204,7 @@ const LookaheadDetailsPanel: React.FC<LookaheadDetailsPanelProps> = ({ task, onC
                 {isAdding ? (
                      <AddConstraintForm onAdd={(c) => { onAddConstraint(task.id, c); setIsAdding(false); }} onCancel={() => setIsAdding(false)} />
                 ) : (
-                    <button onClick={() => setIsAdding(true)} className="mt-4 flex items-center gap-1.5 text-sm text-indigo-600 font-medium p-2 hover:bg-indigo-50 rounded-md w-full justify-center border-2 border-dashed border-gray-300 hover:border-indigo-300">
+                    <button onClick={() => setIsAdding(true)} className="mt-4 flex items-center gap-1.5 text-sm text-blue-600 font-medium p-2 hover:bg-blue-50 rounded-md w-full justify-center border-2 border-dashed border-gray-300 hover:border-blue-300">
                         <PlusIcon className="w-4 h-4" />
                         Flag a Constraint
                     </button>

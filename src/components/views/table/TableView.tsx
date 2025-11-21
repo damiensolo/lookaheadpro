@@ -193,7 +193,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                         onChange={handleToggleAll} 
                         ref={toolbarCheckboxRef}
                         aria-label="Select all visible rows"
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                      />
                  </div>
 
@@ -209,27 +209,27 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                             className="flex items-center gap-4 flex-1"
                         >
                             <div className="flex items-center gap-1 p-1.5 rounded-lg">
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Cut">
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Cut">
                                     <ScissorsIcon className="w-5 h-5" />
                                 </button>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Copy">
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Copy">
                                     <CopyIcon className="w-5 h-5" />
                                 </button>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Paste">
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Paste">
                                     <ClipboardIcon className="w-5 h-5" />
                                 </button>
                                 <button className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all shadow-sm border border-transparent hover:border-red-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-red-500" title="Delete">
                                     <TrashIcon className="w-5 h-5" />
                                 </button>
                                 <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Rename">
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Rename">
                                     <TypeIcon className="w-5 h-5" />
                                 </button>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Edit">
+                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Edit">
                                     <EditIcon className="w-5 h-5" />
                                 </button>
                             </div>
-                            <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                            <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                 {selectedTaskIds.size} selected
                             </span>
                         </motion.div>

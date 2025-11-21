@@ -152,8 +152,8 @@ export const StatusSelector: React.FC<{
             onMouseDown={(e) => { e.stopPropagation(); handleSelect(s); }}
             className={`px-3 py-1.5 text-sm cursor-pointer flex items-center gap-2 ${
               s === currentStatus 
-                ? 'bg-indigo-600 text-white' 
-                : 'text-gray-800 hover:bg-indigo-500 hover:text-white'
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-800 hover:bg-blue-500 hover:text-white'
             }`}
           >
             <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyles[s]} border border-white/20`}></span>
@@ -273,8 +273,8 @@ export const PrioritySelector: React.FC<{
               onMouseDown={(e) => { e.stopPropagation(); handleSelect(p); }}
               className={`px-3 py-1.5 text-sm cursor-pointer flex items-center gap-2 ${
                 p === currentPriority
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-800 hover:bg-indigo-500 hover:text-white'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-800 hover:bg-blue-500 hover:text-white'
               }`}
             >
               <Icon className={`w-4 h-4 ${p === currentPriority ? 'text-white' : color}`} />
@@ -451,8 +451,8 @@ export const InteractiveProgressChart: React.FC<{ progress: Progress }> = ({ pro
         {/* Gradient for area */}
         <defs>
           <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgb(79 70 229)" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="rgb(79 70 229)" stopOpacity="0" />
+            <stop offset="0%" stopColor="rgb(37 99 235)" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="rgb(37 99 235)" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -460,7 +460,7 @@ export const InteractiveProgressChart: React.FC<{ progress: Progress }> = ({ pro
         <path d={areaPathData} fill="url(#areaGradient)" />
 
         {/* The progress line */}
-        <path d={pathData} fill="none" className="stroke-indigo-600" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={pathData} fill="none" className="stroke-blue-600" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
         {/* Tooltip elements */}
         {tooltip && (
@@ -474,7 +474,7 @@ export const InteractiveProgressChart: React.FC<{ progress: Progress }> = ({ pro
               strokeWidth="1"
               strokeDasharray="4 2"
             />
-            <circle cx={tooltip.x} cy={tooltip.y} r="4" className="fill-indigo-600 stroke-white" strokeWidth="2" />
+            <circle cx={tooltip.x} cy={tooltip.y} r="4" className="fill-blue-600 stroke-white" strokeWidth="2" />
             
             <g transform={`translate(${tooltip.x > width / 2 ? tooltip.x - 70 : tooltip.x + 10}, ${padding.top})`}>
               <rect x="0" y="0" width="60" height="24" rx="4" className="fill-gray-800" opacity="0.8" />

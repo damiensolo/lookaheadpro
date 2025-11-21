@@ -158,7 +158,7 @@ const ViewControls: React.FC = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
-                className={`pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 w-48 shadow-sm transition-all duration-200 ${isSearchFocused ? 'pl-3' : 'pl-9'}`}
+                className={`pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 w-48 shadow-sm transition-all duration-200 ${isSearchFocused ? 'pl-3' : 'pl-9'}`}
             />
         </div>
 
@@ -167,7 +167,7 @@ const ViewControls: React.FC = () => {
             <button onClick={() => setShowFilterMenu(p => !p)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm">
                 <FilterIcon className="w-4 h-4" />
                 <span>Filter</span>
-                {activeView.filters.length > 0 && <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-1.5 py-0.5 rounded-full">{activeView.filters.length}</span>}
+                {activeView.filters.length > 0 && <span className="bg-blue-100 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded-full">{activeView.filters.length}</span>}
             </button>
             {showFilterMenu && <FilterMenu onClose={() => setShowFilterMenu(false)} />}
         </div>

@@ -23,7 +23,7 @@ const TaskCard: React.FC<{ task: Task; onPriorityChange: (taskId: number, priori
     const progressColor = task.progress && task.progress.percentage === 100 ? 'bg-green-500' : 'bg-blue-500';
     
     return (
-    <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm mb-2.5 cursor-pointer hover:shadow-md transition-all hover:border-indigo-400 group relative">
+    <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm mb-2.5 cursor-pointer hover:shadow-md transition-all hover:border-blue-400 group relative">
         <div className="flex justify-between items-start mb-1">
             <div className="flex items-center gap-2">
                  <span className="text-[10px] font-mono text-gray-400 bg-gray-50 px-1 rounded border border-gray-100">ID-{task.id}</span>

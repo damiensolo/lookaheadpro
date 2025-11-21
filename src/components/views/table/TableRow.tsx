@@ -39,7 +39,7 @@ const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (i
   const taskNameId = `task-name-${task.id}`;
   const cellClasses = `sticky left-0 z-10 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-b border-r border-gray-200 transition-shadow duration-200 cursor-pointer ${
     isSelected 
-      ? 'bg-indigo-50 group-hover:bg-indigo-100' 
+      ? 'bg-blue-50 group-hover:bg-blue-100' 
       : 'bg-white group-hover:bg-gray-50'
   } ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`;
 
@@ -53,7 +53,7 @@ const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (i
               onChange={() => onToggleRow(task.id)}
               onClick={(e) => e.stopPropagation()}
               aria-labelledby={taskNameId}
-              className={`h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mx-auto ${isSelected ? 'block' : 'hidden group-hover:block'}`}
+              className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mx-auto ${isSelected ? 'block' : 'hidden group-hover:block'}`}
             />
         </div>
     </td>
@@ -202,7 +202,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
 
   return (
     <Fragment>
-      <tr className={`group ${isSelected ? 'bg-indigo-50 hover:bg-indigo-100' : 'hover:bg-gray-50'}`}>
+      <tr className={`group ${isSelected ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}>
         <SelectionCell 
             task={task} 
             isSelected={isSelected} 

@@ -12,7 +12,7 @@ const CustomSelect: React.FC<{ options: { id: string, label: string }[], value: 
     <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="form-select w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+        className="form-select w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
     >
         <option value="" disabled>{placeholder}</option>
         {options.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
@@ -50,7 +50,7 @@ const EnumMultiSelect: React.FC<{ options: { id: string, label: string }[], sele
                         {options.map(opt => (
                             <li key={opt.id} className="p-2 hover:bg-gray-100">
                                 <label className="flex items-center text-sm">
-                                    <input type="checkbox" checked={selected.includes(opt.id)} onChange={() => toggleOption(opt.id)} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-2" />
+                                    <input type="checkbox" checked={selected.includes(opt.id)} onChange={() => toggleOption(opt.id)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2" />
                                     {opt.label}
                                 </label>
                             </li>
@@ -151,7 +151,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
                                     value={newRule.value as string || ''}
                                     onChange={e => setNewRule(p => ({...p, value: e.target.value}))}
                                     placeholder="Enter value..."
-                                    className="form-input w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="form-input w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 />
                            ) : (
                                 <EnumMultiSelect
@@ -169,7 +169,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({ onClose }) => {
                 </div>
             )}
 
-            <button onClick={() => setIsAdding(true)} className="flex items-center gap-1 text-sm text-indigo-600 font-medium p-1 hover:bg-indigo-50 rounded-md">
+            <button onClick={() => setIsAdding(true)} className="flex items-center gap-1 text-sm text-blue-600 font-medium p-1 hover:bg-blue-50 rounded-md">
                 <PlusIcon className="w-4 h-4" />
                 Add filter
             </button>
