@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ColumnId, DisplayDensity } from '../../../types';
@@ -178,12 +179,11 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   const hasSelection = selectedTaskIds.size > 0;
 
   return (
-    <div className="flex flex-col h-full p-4 gap-4">
-        <ViewControls />
+    <div className="flex flex-col h-full p-4">
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col flex-grow">
             
             {/* Contextual Toolbar Row */}
-            <div className="flex items-center h-14 border-b border-gray-200 bg-white flex-shrink-0 transition-all z-40 relative">
+            <div className="flex items-center h-14 border-b border-gray-200 bg-white flex-shrink-0 transition-all z-40 relative pr-4">
                  <div className="w-14 flex items-center justify-center flex-shrink-0 border-r border-gray-200">
                      <input 
                         type="checkbox" 
@@ -195,7 +195,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                      />
                  </div>
 
-                 <div className="flex-1 pl-4 flex items-center">
+                 <div className="flex-1 pl-4 flex items-center overflow-hidden">
                     <AnimatePresence mode="wait">
                     {hasSelection ? (
                         <motion.div 
@@ -233,14 +233,14 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                         </motion.div>
                     ) : (
                          <motion.div
-                            key="title"
+                            key="controls"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="text-base font-medium text-gray-500"
+                            className="w-full"
                          >
-                            Select items to perform actions
+                            <ViewControls />
                          </motion.div>
                     )}
                     </AnimatePresence>

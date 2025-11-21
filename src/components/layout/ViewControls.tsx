@@ -119,6 +119,7 @@ const ViewControls: React.FC = () => {
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -149,13 +150,15 @@ const ViewControls: React.FC = () => {
     <div className="flex items-center gap-3">
         {/* Search */}
         <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-opacity duration-200 ${isSearchFocused ? 'opacity-0' : 'opacity-100'}`} />
             <input 
                 type="text" 
                 placeholder="Search tasks..." 
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 w-48 shadow-sm"
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                className={`pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 w-48 shadow-sm transition-all duration-200 ${isSearchFocused ? 'pl-3' : 'pl-9'}`}
             />
         </div>
 
