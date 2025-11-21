@@ -3,10 +3,12 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ColumnId, DisplayDensity } from '../../../types';
 import TableRow from './TableRow';
-import { ArrowDownIcon, ArrowUpIcon, SortIcon, ScissorsIcon, CopyIcon, TrashIcon, TypeIcon, EditIcon, ClipboardIcon } from '../../common/Icons';
+import { ArrowDownIcon, ArrowUpIcon, SortIcon, ScissorsIcon, CopyIcon, TrashIcon, TypeIcon, EditIcon, ClipboardIcon, SettingsIcon } from '../../common/Icons';
 import { useProject } from '../../../context/ProjectContext';
 import { useProjectData } from '../../../hooks/useProjectData';
 import ViewControls from '../../layout/ViewControls';
+import FieldsMenu from '../../layout/FieldsMenu';
+import { Popover } from '../../common/ui/Popover';
 
 interface TableViewProps {
   isScrolled: boolean;
@@ -195,7 +197,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                      />
                  </div>
 
-                 <div className="flex-1 pl-4 flex items-center overflow-hidden">
+                 <div className="flex-1 pl-4 flex items-center">
                     <AnimatePresence mode="wait">
                     {hasSelection ? (
                         <motion.div 
@@ -204,7 +206,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="flex items-center gap-4"
+                            className="flex items-center gap-4 flex-1"
                         >
                             <div className="flex items-center gap-1 p-1.5 rounded-lg">
                                 <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Cut">
@@ -238,12 +240,27 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="w-full"
                          >
                             <ViewControls />
                          </motion.div>
                     )}
                     </AnimatePresence>
+                    
+                    {!hasSelection && (
+                        <div className="ml-auto pl-4 border-l border-gray-200 h-6 flex items-center">
+                             <Popover
+                                trigger={
+                                    <button className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                                        <SettingsIcon className="w-4 h-4" />
+                                    </button>
+                                }
+                                content={
+                                    <FieldsMenu onClose={() => {}} disableClickOutside className="right-0 mt-2" />
+                                }
+                                align="end"
+                             />
+                        </div>
+                    )}
                  </div>
             </div>
 
@@ -292,7 +309,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                         </th>
                         );
                     })}
-                    <th scope="col" className={`${headerHeightClass} border-b border-gray-200 w-full`}></th>
+                    <th scope="col" className={`${headerHeightClass} border-b border-gray-200 w-full px-2`}></th>
                     </tr>
                 </thead>
                 <tbody>

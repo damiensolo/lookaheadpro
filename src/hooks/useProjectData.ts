@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { Task, View } from '../types';
 
@@ -78,17 +79,30 @@ export const useProjectData = (tasks: Task[], activeView: View, searchTerm: stri
   const { visibleTaskIds, rowNumberMap } = useMemo(() => {
     const ids: number[] = [];
     const map = new Map<number, number>();
-    let counter = 1;
-    const flatten = (taskItems: Task[]) => {
-        taskItems.forEach(task => {
-            ids.push(task.id);
-            map.set(task.id, counter++);
-            if (task.isExpanded && task.children) {
-                flatten(task.children);
+    
+    // First pass: assign row numbers to ALL filtered tasks (stable numbering)
+    let rowCounter = 1;
+    const assignRowNumbers = (items: Task[]) => {
+        items.forEach(task => {
+            map.set(task.id, rowCounter++);
+            if (task.children) {
+                assignRowNumbers(task.children);
             }
         });
     };
-    flatten(sortedTasks);
+    assignRowNumbers(sortedTasks);
+
+    // Second pass: determine which tasks are currently visible (respecting expansion)
+    const determineVisible = (items: Task[]) => {
+        items.forEach(task => {
+            ids.push(task.id);
+            if (task.isExpanded && task.children) {
+                determineVisible(task.children);
+            }
+        });
+    };
+    determineVisible(sortedTasks);
+
     return { visibleTaskIds: ids, rowNumberMap: map };
   }, [sortedTasks]);
 

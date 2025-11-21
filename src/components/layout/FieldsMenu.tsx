@@ -3,9 +3,12 @@ import { ColumnId, DisplayDensity } from '../../types';
 import { GripVerticalIcon } from '../common/Icons';
 import { useProject } from '../../context/ProjectContext';
 import { DEFAULT_COLUMNS } from '../../constants';
+import { cn } from '../../lib/utils';
 
 interface SettingsMenuProps {
   onClose: () => void;
+  className?: string;
+  disableClickOutside?: boolean;
 }
 
 const DensityOption: React.FC<{
@@ -25,7 +28,7 @@ const DensityOption: React.FC<{
 );
 
 
-const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose }) => {
+const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableClickOutside }) => {
   const { activeView, setColumns, setDisplayDensity, setShowGridLines } = useProject();
   const { columns, displayDensity, showGridLines } = activeView;
   const menuRef = useRef<HTMLDivElement>(null);
@@ -33,6 +36,8 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose }) => {
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
   
   useEffect(() => {
+    if (disableClickOutside) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         onClose();
@@ -40,7 +45,7 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose }) => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
+  }, [onClose, disableClickOutside]);
 
   const handleVisibilityChange = (id: ColumnId) => {
     setColumns(prev => prev.map(c => c.id === id ? { ...c, visible: !c.visible } : c));
@@ -88,7 +93,7 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose }) => {
   const onResetColumns = () => setColumns(DEFAULT_COLUMNS);
 
   return (
-    <div ref={menuRef} className="absolute top-full right-0 mt-2 w-72 bg-white rounded-md shadow-lg border border-gray-200 z-50 flex flex-col">
+    <div ref={menuRef} className={cn("absolute top-full right-0 mt-2 w-72 bg-white rounded-md shadow-lg border border-gray-200 z-50 flex flex-col", className)}>
       <div className="p-3 border-b border-gray-200">
         <h3 className="text-sm font-semibold text-gray-800">View settings</h3>
       </div>
