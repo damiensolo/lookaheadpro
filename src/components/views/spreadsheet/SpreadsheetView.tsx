@@ -7,54 +7,11 @@ import FieldsMenu from '../../layout/FieldsMenu';
 import { Popover } from '../../common/ui/Popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../common/ui/Tooltip';
 import ColorPicker from '../../common/ui/ColorPicker';
+import { BudgetLineItem, BudgetLineItemStyle, SpreadsheetColumn } from '../../../types';
+import { MOCK_BUDGET_DATA } from '../../../data';
+import { useProject } from '../../../context/ProjectContext';
 
-// --- Types & Data ---
-
-interface BudgetLineItem {
-  id: string;
-  sNo: number;
-  costCode: string;
-  name: string;
-  divisionCode: string;
-  divisionName: string;
-  type: 'Original Bid' | 'Upcoming CO';
-  quantity: number | null;
-  unit: string;
-  effortHours: number | null;
-  calcType: string;
-  totalBudget: number;
-  labor: number | null;
-  equipment: number | null;
-  subcontractor: number | null;
-  material: number | null;
-  others: number | null;
-  hasWarning?: boolean;
-}
-
-const MOCK_BUDGET_DATA: BudgetLineItem[] = [
-  { id: '1', sNo: 1, costCode: '01 89 00', name: 'Site Construction Performance Req...', divisionCode: '01', divisionName: 'General Requirements', type: 'Original Bid', quantity: 1000, unit: 'sq', effortHours: 36, calcType: 'AU', totalBudget: 115000.00, labor: 10000.00, equipment: 10000.00, subcontractor: 15000.00, material: 10000.00, others: 20000.00 },
-  { id: '2', sNo: 2, costCode: '31 10 00', name: 'Site Clearing', divisionCode: '31', divisionName: 'Earthwork', type: 'Original Bid', quantity: 1000, unit: 'sq', effortHours: 120, calcType: 'AU', totalBudget: 107000.00, labor: 15000.00, equipment: 10000.00, subcontractor: 15000.00, material: 12000.00, others: 10000.00 },
-  { id: '3', sNo: 3, costCode: '31 00 00', name: 'Earthwork', divisionCode: '31', divisionName: 'Earthwork', type: 'Original Bid', quantity: 800, unit: 'sq', effortHours: 35928, calcType: 'AU', totalBudget: 119000.00, labor: 15000.00, equipment: 10000.00, subcontractor: 12000.00, material: 10000.00, others: 12000.00 },
-  { id: '4', sNo: 4, costCode: '04 00 00', name: 'Masonry', divisionCode: '04', divisionName: 'Masonry', type: 'Original Bid', quantity: 800, unit: 'sq', effortHours: 435, calcType: 'AU', totalBudget: 115000.00, labor: 20000.00, equipment: 10000.00, subcontractor: 10000.00, material: 18000.00, others: 20000.00 },
-  { id: '5', sNo: 5, costCode: '26 00 00', name: 'Electrical', divisionCode: '26', divisionName: 'Electrical', type: 'Original Bid', quantity: 1000, unit: 'l', effortHours: 470, calcType: 'AU', totalBudget: 100000.00, labor: 10000.00, equipment: 12000.00, subcontractor: 15000.00, material: 10000.00, others: 15000.00 },
-  { id: '6', sNo: 6, costCode: '3060', name: 'Windows and Doors', divisionCode: '30', divisionName: 'Windows and Doors', type: 'Original Bid', quantity: 1200, unit: 'Nos', effortHours: 680, calcType: 'AU', totalBudget: 127000.00, labor: 13000.00, equipment: 12000.00, subcontractor: 10000.00, material: 15000.00, others: 12000.00 },
-  { id: '7', sNo: 7, costCode: '22 00 00', name: 'Plumbing', divisionCode: '22', divisionName: 'Plumbing', type: 'Original Bid', quantity: 700, unit: 'Nos', effortHours: 387, calcType: 'AU', totalBudget: 114000.00, labor: 15000.00, equipment: 10000.00, subcontractor: 12000.00, material: 20000.00, others: 22000.00 },
-  { id: '8', sNo: 8, costCode: '23 00 00', name: 'Heating, Ventilating, and Air Con...', divisionCode: '23', divisionName: 'Heating, Ventilating, An...', type: 'Original Bid', quantity: 1000, unit: 'Tons', effortHours: 616, calcType: 'AU', totalBudget: 111000.00, labor: 10000.00, equipment: 12000.00, subcontractor: 15000.00, material: 17000.00, others: 15000.00 },
-  { id: '9', sNo: 9, costCode: '5010', name: 'Interior Finishes', divisionCode: '50', divisionName: 'Interior Finishes', type: 'Original Bid', quantity: 600, unit: 'Nos', effortHours: 780, calcType: 'AU', totalBudget: 113000.00, labor: 15000.00, equipment: 10000.00, subcontractor: 12000.00, material: 14000.00, others: 20000.00 },
-  { id: '10', sNo: 10, costCode: '10 70 00', name: 'Exterior Specialties', divisionCode: '10', divisionName: 'Specialties', type: 'Original Bid', quantity: 500, unit: 'Nos', effortHours: 380, calcType: 'AU', totalBudget: 123000.00, labor: 13000.00, equipment: 15000.00, subcontractor: 20000.00, material: 16000.00, others: 4000.00 },
-  { id: '11', sNo: 11, costCode: '48 70 00', name: 'Electrical Power Generation Testi...', divisionCode: '48', divisionName: 'Electrical Power Gener...', type: 'Original Bid', quantity: 400, unit: 'Nos', effortHours: 30, calcType: 'AU', totalBudget: 98000.00, labor: 12000.00, equipment: 11000.00, subcontractor: 10000.00, material: 14000.00, others: 15000.00 },
-  { id: '12', sNo: 12, costCode: '23 05 93', name: 'Testing, Adjusting, and Balancing ...', divisionCode: '23', divisionName: 'Heating, Ventilating, An...', type: 'Original Bid', quantity: 300, unit: 'Tons', effortHours: 80, calcType: 'AU', totalBudget: 82000.00, labor: 10000.00, equipment: 15000.00, subcontractor: 10000.00, material: 7000.00, others: 5000.00 },
-  { id: '13', sNo: 13, costCode: '22 08 00', name: 'Commissioning of Plumbing', divisionCode: '22', divisionName: 'Plumbing', type: 'Original Bid', quantity: 400, unit: 'Nos', effortHours: 50, calcType: 'AU', totalBudget: 70000.00, labor: 10000.00, equipment: 5000.00, subcontractor: 5000.00, material: 10000.00, others: 15000.00 },
-  { id: '14', sNo: 14, costCode: '', name: 'Concrete 1', divisionCode: '', divisionName: '', type: 'Upcoming CO', quantity: null, unit: '', effortHours: null, calcType: '', totalBudget: 4740.00, labor: null, equipment: null, subcontractor: null, material: null, others: null, hasWarning: true },
-];
-
-interface ColumnState {
-    id: string;
-    label: string;
-    width: number;
-    align?: 'left' | 'right';
-    isTotal?: boolean;
-}
+// --- Constants ---
 
 const formatCurrency = (amount: number | null) => {
   if (amount === null) return '';
@@ -74,9 +31,7 @@ const BACKGROUND_COLORS = ['#fef2f2', '#fff7ed', '#fffbeb', '#f0fdf4', '#eff6ff'
 // Saturated colors for text/borders
 const TEXT_BORDER_COLORS = ['#000000', '#4b5563', '#dc2626', '#ea580c', '#d97706', '#16a34a', '#0d9488', '#2563eb', '#4f46e5', '#9333ea', '#db2777', '#e11d48', '#0891b2'];
 
-
-const SpreadsheetView: React.FC = () => {
-  const [columns, setColumns] = useState<ColumnState[]>([
+const DEFAULT_COLUMNS: SpreadsheetColumn[] = [
     { id: 'costCode', label: 'Cost Code', width: 120 },
     { id: 'name', label: 'Name', width: 250 },
     { id: 'divisionCode', label: 'Division Code', width: 130 },
@@ -92,7 +47,24 @@ const SpreadsheetView: React.FC = () => {
     { id: 'subcontractor', label: 'Subcontractor', width: 130, align: 'right', isTotal: true },
     { id: 'material', label: 'Material', width: 130, align: 'right', isTotal: true },
     { id: 'others', label: 'Others', width: 130, align: 'right', isTotal: true },
-  ]);
+];
+
+const SpreadsheetView: React.FC = () => {
+  const { activeView, updateView } = useProject();
+  
+  // Initialize state from view persistence or defaults
+  const budgetData = useMemo(() => activeView.spreadsheetData || MOCK_BUDGET_DATA, [activeView.spreadsheetData]);
+  const columns = useMemo(() => activeView.spreadsheetColumns || DEFAULT_COLUMNS, [activeView.spreadsheetColumns]);
+
+  // Persist defaults if missing (on mount)
+  useEffect(() => {
+      if (!activeView.spreadsheetData || !activeView.spreadsheetColumns) {
+          updateView({
+              spreadsheetData: activeView.spreadsheetData || MOCK_BUDGET_DATA,
+              spreadsheetColumns: activeView.spreadsheetColumns || DEFAULT_COLUMNS
+          });
+      }
+  }, [activeView.spreadsheetData, activeView.spreadsheetColumns, updateView]);
 
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [focusedCell, setFocusedCell] = useState<{ rowId: string; colId: string } | null>(null);
@@ -102,8 +74,8 @@ const SpreadsheetView: React.FC = () => {
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
   const activeResizerId = useRef<string | null>(null);
 
-  const isAllSelected = selectedRowIds.size === MOCK_BUDGET_DATA.length;
-  const isSomeSelected = selectedRowIds.size > 0 && selectedRowIds.size < MOCK_BUDGET_DATA.length;
+  const isAllSelected = selectedRowIds.size === budgetData.length;
+  const isSomeSelected = selectedRowIds.size > 0 && selectedRowIds.size < budgetData.length;
 
   useEffect(() => {
     if (toolbarCheckboxRef.current) {
@@ -126,7 +98,7 @@ const SpreadsheetView: React.FC = () => {
     if (isAllSelected) {
         setSelectedRowIds(new Set());
     } else {
-        setSelectedRowIds(new Set(MOCK_BUDGET_DATA.map(item => item.id)));
+        setSelectedRowIds(new Set(budgetData.map(item => item.id)));
     }
   };
 
@@ -155,9 +127,52 @@ const SpreadsheetView: React.FC = () => {
       setSelectedRowIds(new Set()); 
   };
 
+  // Keyboard Navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (!focusedCell) return;
+
+      // Map IDs to indices
+      const rowIndex = budgetData.findIndex(item => item.id === focusedCell.rowId);
+      const colIndex = columns.findIndex(col => col.id === focusedCell.colId);
+
+      if (rowIndex === -1 || colIndex === -1) return;
+
+      let nextRowIndex = rowIndex;
+      let nextColIndex = colIndex;
+
+      switch (e.key) {
+          case 'ArrowUp':
+              nextRowIndex = Math.max(0, rowIndex - 1);
+              e.preventDefault();
+              break;
+          case 'ArrowDown':
+              nextRowIndex = Math.min(budgetData.length - 1, rowIndex + 1);
+              e.preventDefault();
+              break;
+          case 'ArrowLeft':
+              nextColIndex = Math.max(0, colIndex - 1);
+              e.preventDefault();
+              break;
+          case 'ArrowRight':
+              nextColIndex = Math.min(columns.length - 1, colIndex + 1);
+              e.preventDefault();
+              break;
+          default:
+              return;
+      }
+
+      if (nextRowIndex !== rowIndex || nextColIndex !== colIndex) {
+          setFocusedCell({
+              rowId: budgetData[nextRowIndex].id,
+              colId: columns[nextColIndex].id
+          });
+      }
+  };
+
   const handleResize = useCallback((columnId: string, newWidth: number) => {
-    setColumns(prev => prev.map(c => c.id === columnId ? { ...c, width: Math.max(newWidth, 60) } : c));
-  }, []);
+    const updatedColumns = columns.map(c => c.id === columnId ? { ...c, width: Math.max(newWidth, 60) } : c);
+    updateView({ spreadsheetColumns: updatedColumns });
+  }, [columns, updateView]);
 
   const onMouseDown = (columnId: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -189,8 +204,28 @@ const SpreadsheetView: React.FC = () => {
     document.body.classList.add('grabbing');
   };
 
+  const handleBulkStyleUpdate = (newStyle: Partial<BudgetLineItemStyle>) => {
+    const updatedData = budgetData.map(item => {
+        if (selectedRowIds.has(item.id)) {
+            const currentStyle = item.style || {};
+            const mergedStyle = { ...currentStyle, ...newStyle };
+            
+            // clean up undefined values to allow "unsetting"
+            (Object.keys(newStyle) as (keyof BudgetLineItemStyle)[]).forEach(key => {
+                if (newStyle[key] === undefined) {
+                    delete mergedStyle[key];
+                }
+            });
+
+            return { ...item, style: mergedStyle };
+        }
+        return item;
+    });
+    updateView({ spreadsheetData: updatedData });
+  };
+
   const totals = useMemo(() => {
-    return MOCK_BUDGET_DATA.reduce((acc, item) => ({
+    return budgetData.reduce((acc, item) => ({
       effortHours: acc.effortHours + (item.effortHours || 0),
       totalBudget: acc.totalBudget + (item.totalBudget || 0),
       labor: acc.labor + (item.labor || 0),
@@ -199,13 +234,13 @@ const SpreadsheetView: React.FC = () => {
       material: acc.material + (item.material || 0),
       others: acc.others + (item.others || 0),
     }), { effortHours: 0, totalBudget: 0, labor: 0, equipment: 0, subcontractor: 0, material: 0, others: 0 });
-  }, []);
+  }, [budgetData]);
 
   const hasRowSelection = selectedRowIds.size > 0;
 
   return (
-    <div className="flex flex-col h-full p-4">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col flex-grow">
+    <div className="flex flex-col h-full p-4 outline-none focus:outline-none" onKeyDown={handleKeyDown} tabIndex={0}>
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative flex flex-col flex-grow focus:outline-none">
             
             {/* Toolbar Row */}
             <div className="flex items-center h-14 border-b border-gray-200 bg-white flex-shrink-0 transition-all z-40 relative pr-4">
@@ -274,19 +309,19 @@ const SpreadsheetView: React.FC = () => {
                                     <ColorPicker 
                                         icon={<FillColorIcon className="w-5 h-5" />} 
                                         label="Background" 
-                                        onColorSelect={() => {}} 
+                                        onColorSelect={(color) => handleBulkStyleUpdate({ backgroundColor: color })} 
                                         presets={BACKGROUND_COLORS}
                                     />
                                     <ColorPicker 
                                         icon={<BorderColorIcon className="w-5 h-5" />} 
                                         label="Border" 
-                                        onColorSelect={() => {}} 
+                                        onColorSelect={(color) => handleBulkStyleUpdate({ borderColor: color })} 
                                         presets={TEXT_BORDER_COLORS}
                                     />
                                     <ColorPicker 
                                         icon={<TextColorIcon className="w-5 h-5" />} 
                                         label="Text" 
-                                        onColorSelect={() => {}} 
+                                        onColorSelect={(color) => handleBulkStyleUpdate({ textColor: color })} 
                                         presets={TEXT_BORDER_COLORS}
                                     />
                                 </div>
@@ -383,26 +418,51 @@ const SpreadsheetView: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {MOCK_BUDGET_DATA.map((row) => {
+              {budgetData.map((row) => {
                 const isSelected = selectedRowIds.has(row.id);
                 const isRowFocused = focusedCell?.rowId === row.id;
+                
+                const customStyle = row.style || {};
+                const customBorder = customStyle.borderColor;
+
+                const rowStyle: React.CSSProperties = {};
+                if (customStyle.backgroundColor) rowStyle.backgroundColor = customStyle.backgroundColor;
+                if (customStyle.textColor) rowStyle.color = customStyle.textColor;
+
+                let rowClasses = 'h-7 group';
+                if (!customStyle.backgroundColor) {
+                    rowClasses += isSelected ? ' bg-blue-50' : ' hover:bg-gray-50';
+                }
 
                 return (
                   <tr 
                     key={row.id} 
-                    className={`h-7 group ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                    className={rowClasses}
+                    style={rowStyle}
                   >
                     {/* Row Number Cell */}
                     <td 
                       onClick={(e) => handleRowHeaderClick(row.id, e.metaKey || e.ctrlKey)}
-                      className={`sticky left-0 z-20 border-b border-r border-gray-200 text-center cursor-pointer transition-colors p-0
+                      className={`sticky left-0 z-20 border-r border-gray-200 text-center cursor-pointer transition-colors p-0 relative
+                        ${!customBorder ? 'border-b' : ''}
                         ${isSelected ? 'bg-blue-600 text-white' : isRowFocused ? 'bg-blue-100 text-blue-800 font-semibold' : 'bg-white text-gray-500 group-hover:bg-gray-50'}
                         ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}
                       `}
+                      style={{
+                          backgroundColor: isSelected ? undefined : isRowFocused ? undefined : customStyle.backgroundColor,
+                          color: isSelected ? undefined : isRowFocused ? undefined : customStyle.textColor,
+                      }}
                     >
-                      <div className="flex items-center justify-center h-full text-[10px]">
+                      <div className="flex items-center justify-center h-full text-[10px] relative z-20">
                         {row.sNo}
                       </div>
+                      {/* Absolute Custom Borders for Row Header */}
+                      {customBorder && (
+                        <>
+                            <div className="absolute top-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                            <div className="absolute bottom-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                        </>
+                      )}
                     </td>
 
                     {/* Data Cells */}
@@ -421,16 +481,24 @@ const SpreadsheetView: React.FC = () => {
                             <td 
                                 key={col.id}
                                 onClick={() => handleCellClick(row.id, col.id)}
-                                className={`border-b border-r border-gray-200 px-2 text-gray-600 relative cursor-cell 
+                                className={`border-r border-gray-200 px-2 text-gray-600 relative cursor-cell 
+                                    ${!customBorder ? 'border-b' : ''}
                                     ${col.align === 'right' ? 'text-right' : 'text-left'}
                                     ${col.id === 'name' || col.id === 'totalBudget' ? 'font-medium text-gray-900' : ''}
                                 `}
                             >
-                                <div className="truncate w-full" title={typeof content === 'string' ? content : undefined}>
+                                <div className="truncate w-full relative z-20" title={typeof content === 'string' ? content : undefined} style={{ color: customStyle.textColor }}>
                                     {content}
                                 </div>
                                 {isCellFocused && (
-                                    <div className="absolute inset-0 border-2 border-blue-600 z-10 pointer-events-none"></div>
+                                    <div className="absolute inset-0 border-2 border-blue-600 z-30 pointer-events-none"></div>
+                                )}
+                                {/* Absolute Custom Borders for Data Cells */}
+                                {customBorder && (
+                                    <>
+                                        <div className="absolute top-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                                        <div className="absolute bottom-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                                    </>
                                 )}
                             </td>
                         );

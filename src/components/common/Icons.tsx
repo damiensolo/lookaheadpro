@@ -319,12 +319,14 @@ export const CalendarIcon: React.FC<IconProps> = ({ title, ...props }) => (
   </svg>
 );
 
+// Updated FillColorIcon to look like a paint bucket
 export const FillColorIcon: React.FC<IconProps> = ({ title, ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     {title && <title>{title}</title>}
-    <path d="M19 11l-8-8-9 9 8 8 5-5 9-9z" />
-    <path d="M2 22h20" />
-    <path d="M22 17a3 3 0 0 1-3 3 3 3 0 0 1-3-3c0-1.66 1.5-4.5 3-4.5s3 2.84 3 4.5z" />
+    <path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z" />
+    <path d="m5 2 5 5" />
+    <path d="M2 13h15" />
+    <path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z" />
   </svg>
 );
 
@@ -348,8 +350,10 @@ export const TextColorIcon: React.FC<IconProps> = ({ title, ...props }) => (
 export const PaintBucketIcon: React.FC<IconProps> = ({ title, ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     {title && <title>{title}</title>}
-    <path d="M19 11l-8-8-9 9 8 8 5-5 9-9z"></path>
-    <path d="M22 17v5h-5"></path>
+    <path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z" />
+    <path d="m5 2 5 5" />
+    <path d="M2 13h15" />
+    <path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z" />
   </svg>
 );
 

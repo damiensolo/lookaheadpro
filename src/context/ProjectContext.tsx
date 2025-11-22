@@ -16,7 +16,7 @@ const initialView: View = {
   sort: null,
   columns: DEFAULT_COLUMNS,
   displayDensity: 'comfortable',
-  showGridLines: true,
+  showGridLines: false,
 };
 
 interface ProjectContextType {

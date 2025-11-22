@@ -82,6 +82,43 @@ export interface FilterRule {
     value?: string | string[];
 }
 
+// Spreadsheet Specific Types
+export interface BudgetLineItemStyle {
+  backgroundColor?: string;
+  borderColor?: string;
+  textColor?: string;
+}
+
+export interface BudgetLineItem {
+  id: string;
+  sNo: number;
+  costCode: string;
+  name: string;
+  divisionCode: string;
+  divisionName: string;
+  type: 'Original Bid' | 'Upcoming CO';
+  quantity: number | null;
+  unit: string;
+  effortHours: number | null;
+  calcType: string;
+  totalBudget: number;
+  labor: number | null;
+  equipment: number | null;
+  subcontractor: number | null;
+  material: number | null;
+  others: number | null;
+  hasWarning?: boolean;
+  style?: BudgetLineItemStyle;
+}
+
+export interface SpreadsheetColumn {
+    id: string;
+    label: string;
+    width: number;
+    align?: 'left' | 'right';
+    isTotal?: boolean;
+}
+
 export interface View {
   id: string;
   name: string;
@@ -90,4 +127,6 @@ export interface View {
   columns: Column[];
   displayDensity: DisplayDensity;
   showGridLines: boolean;
+  spreadsheetData?: BudgetLineItem[];
+  spreadsheetColumns?: SpreadsheetColumn[];
 }
