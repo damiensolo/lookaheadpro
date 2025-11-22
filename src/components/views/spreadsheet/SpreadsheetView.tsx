@@ -106,12 +106,12 @@ const SpreadsheetView: React.FC = () => {
     // Clear focused cell when selecting a row via header
     setFocusedCell(null);
     setSelectedRowIds(prev => {
-      const newSet = multiSelect ? new Set(prev) : new Set();
+      const newSet = multiSelect ? new Set(prev) : new Set<string>();
       if (prev.has(id) && multiSelect) {
         newSet.delete(id);
       } else if (!multiSelect) {
         if (prev.has(id) && prev.size === 1) {
-            return new Set();
+            return new Set<string>();
         }
         newSet.add(id);
       } else {
@@ -393,19 +393,19 @@ const SpreadsheetView: React.FC = () => {
             </div>
       
         <div className="flex-grow overflow-auto relative select-none" ref={scrollContainerRef}>
-          <table className="border-collapse text-xs min-w-max table-fixed">
+          <table className="border-collapse text-sm min-w-max table-fixed">
             <thead className="bg-gray-50 text-gray-700 font-semibold sticky top-0 z-30">
               <tr className="h-8">
                 {/* Sticky Row Number Header */}
                 <th className={`sticky left-0 z-40 w-14 border-b border-r border-gray-200 px-1 text-center transition-shadow ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''} bg-gray-50`}>
-                  <div className="flex items-center justify-center h-full w-full text-xs text-gray-500 font-semibold">
+                  <div className="flex items-center justify-center h-full w-full text-sm text-gray-500 font-semibold">
                     #
                   </div>
                 </th>
                 {columns.map(col => (
                   <th 
                     key={col.id} 
-                    className={`border-b border-r border-gray-200 px-2 whitespace-nowrap uppercase text-xs font-semibold relative group ${col.align === 'right' ? 'text-right' : 'text-left'} 
+                    className={`border-b border-r border-gray-200 px-2 whitespace-nowrap uppercase text-sm font-semibold relative group ${col.align === 'right' ? 'text-right' : 'text-left'} 
                         ${focusedCell?.colId === col.id ? 'bg-blue-100 text-blue-800' : 'bg-gray-50 text-gray-700'}`}
                     style={{ width: col.width }}
                   >
@@ -453,7 +453,7 @@ const SpreadsheetView: React.FC = () => {
                           color: isSelected ? undefined : isRowFocused ? undefined : customStyle.textColor,
                       }}
                     >
-                      <div className="flex items-center justify-center h-full text-[10px] relative z-20">
+                      <div className="flex items-center justify-center h-full text-sm relative z-20">
                         {row.sNo}
                       </div>
                       {/* Absolute Custom Borders for Row Header */}
@@ -512,7 +512,7 @@ const SpreadsheetView: React.FC = () => {
             <tfoot className="bg-gray-100 text-gray-900 border-t-2 border-gray-300 sticky bottom-0 z-30 font-semibold shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <tr className="h-8">
                     <td className={`sticky left-0 z-40 border-r border-gray-300 p-0 text-center bg-gray-100 ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.1)]' : ''}`}>
-                        <div className="flex items-center justify-center h-full text-xs">Total</div>
+                        <div className="flex items-center justify-center h-full text-sm">Total</div>
                     </td>
                     {columns.map((col) => {
                         let value: React.ReactNode = '';

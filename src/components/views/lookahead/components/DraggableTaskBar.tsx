@@ -1,5 +1,6 @@
+
 import React, { useCallback, useEffect, useState } from 'react';
-import { LookaheadTask, ConstraintStatus } from '../types';
+import { LookaheadTask } from '../types';
 import { addDays, formatDateISO, getDaysDiff, parseLookaheadDate } from '../../../../lib/dateUtils';
 
 interface DraggableTaskBarProps {
@@ -10,38 +11,6 @@ interface DraggableTaskBarProps {
     onDayClick: (task: LookaheadTask, date: Date) => void;
 }
 
-// Helper to determine task status
-const getTaskStatus = (task: LookaheadTask): 'ready' | 'at_risk' | 'blocked' => {
-  const statuses = Object.values(task.status);
-  if (statuses.includes(ConstraintStatus.Overdue)) {
-    return 'blocked';
-  }
-  if (statuses.includes(ConstraintStatus.Pending)) {
-    return 'at_risk';
-  }
-  return 'ready';
-};
-
-// Styles for different statuses
-const statusStyles: Record<'ready' | 'at_risk' | 'blocked', { bar: string; progress: string; ring: string }> = {
-  ready: {
-    bar: 'bg-green-200/50',
-    progress: 'bg-green-500/70',
-    ring: ''
-  },
-  at_risk: {
-    bar: 'bg-yellow-200/50',
-    progress: 'bg-yellow-500/70',
-    ring: ''
-  },
-  blocked: {
-    bar: 'bg-red-200/50',
-    progress: 'bg-red-500/70',
-    ring: 'ring-2 ring-inset ring-red-500'
-  }
-};
-
-
 const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartDate, dayWidth, onUpdateTask, onDayClick }) => {
     const [dragState, setDragState] = useState<{
         type: 'move' | 'resize-left' | 'resize-right';
@@ -49,9 +18,19 @@ const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartD
         originalTask: LookaheadTask;
     } | null>(null);
     
-    const taskStatus = getTaskStatus(task);
-    const styles = statusStyles[taskStatus];
     const isCritical = !!task.isCriticalPath;
+    
+    // Updated Color Logic: Neutral for standard, Red for critical path
+    const styles = isCritical ? {
+        bar: 'bg-red-50 border-red-200',
+        progress: 'bg-red-600',
+        wrapper: 'z-20' // Critical path slightly elevated
+    } : {
+        bar: 'bg-slate-100 border-slate-300',
+        progress: 'bg-slate-400',
+        wrapper: 'z-10'
+    };
+
     const taskStart = parseLookaheadDate(task.startDate);
     const taskEnd = parseLookaheadDate(task.finishDate);
     const offsetDays = getDaysDiff(projectStartDate, taskStart);
@@ -127,9 +106,9 @@ const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartD
 
     return (
         <div 
-            className={`absolute top-1/2 -translate-y-1/2 group rounded-md overflow-visible
-                ${isCritical && taskStatus !== 'blocked' ? 'border-t-4 border-b-4 border-red-700 box-content h-4' : 'h-4'}
-                ${dragState?.type === 'move' ? 'cursor-grabbing opacity-80 z-20' : 'cursor-grab z-10'}`}
+            className={`absolute top-1/2 -translate-y-1/2 group rounded-md overflow-visible h-5
+                ${styles.wrapper}
+                ${dragState?.type === 'move' ? 'cursor-grabbing opacity-80 z-30' : 'cursor-grab'}`}
             style={{ 
                 left: `${offsetDays * dayWidth}px`, 
                 width: `${barWidth}px`,
@@ -138,7 +117,7 @@ const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartD
             title={`${task.name}: ${task.startDate} to ${task.finishDate}`}
         >
             <div 
-              className={`w-full h-full rounded-md ${styles.bar} ${styles.ring}`}
+              className={`w-full h-full rounded-md border ${styles.bar} shadow-sm`}
             >
                 <div 
                     className={`h-full rounded-md ${styles.progress}`}
@@ -154,7 +133,7 @@ const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartD
                     return (
                         <div
                             key={i}
-                            className="h-full border-r border-white/40 last:border-r-0 cursor-pointer hover:bg-black/10"
+                            className="h-full border-r border-white/20 last:border-r-0 cursor-pointer hover:bg-black/5"
                             style={{ width: `${dayWidth}px` }}
                             onClick={(e) => {
                                 e.stopPropagation();
