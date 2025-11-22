@@ -1,3 +1,4 @@
+
 export enum Status {
   New = 'New',
   Planned = 'Planned',
@@ -38,6 +39,12 @@ export interface HealthItem {
     details: string;
 }
 
+export interface TaskStyle {
+  backgroundColor?: string;
+  borderColor?: string;
+  textColor?: string;
+}
+
 export interface Task {
   id: number;
   name: string;
@@ -51,6 +58,7 @@ export interface Task {
   impact?: Impact;
   progress?: Progress;
   health?: HealthItem[];
+  style?: TaskStyle;
 }
 
 export type ColumnId = 'name' | 'status' | 'assignee' | 'dates' | 'progress' | 'details' | 'priority';

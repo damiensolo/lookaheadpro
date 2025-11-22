@@ -35,16 +35,31 @@ const getRowHeight = (density: DisplayDensity) => {
 
 // --- Cell Content Components ---
 
-const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (id: number) => void, rowNum?: number, isScrolled: boolean, rowHeightClass: string }> = ({ task, isSelected, onToggleRow, rowNum, isScrolled, rowHeightClass }) => {
+const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (id: number) => void, rowNum?: number, isScrolled: boolean, rowHeightClass: string, customBg?: string, customBorder?: string }> = ({ task, isSelected, onToggleRow, rowNum, isScrolled, rowHeightClass, customBg, customBorder }) => {
   const taskNameId = `task-name-${task.id}`;
-  const cellClasses = `sticky left-0 z-10 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-b border-r border-gray-200 transition-shadow duration-200 cursor-pointer ${
-    isSelected 
-      ? 'bg-blue-50 group-hover:bg-blue-100' 
-      : 'bg-white group-hover:bg-gray-50'
-  } ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`;
+  
+  // If custom background is set, use it. Otherwise fall back to selection state colors or defaults.
+  
+  let bgClass = '';
+  let style: React.CSSProperties = {};
+
+  if (customBg) {
+    style.backgroundColor = customBg;
+  } else {
+    bgClass = isSelected ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-white group-hover:bg-gray-50';
+  }
+  
+  if (customBorder) {
+      style.borderBottomColor = customBorder;
+      style.borderTopColor = customBorder;
+      style.borderTopWidth = '1px';
+      style.borderTopStyle = 'solid';
+  }
+
+  const cellClasses = `sticky left-0 z-10 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-b border-r border-gray-200 transition-shadow duration-200 cursor-pointer ${bgClass} ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`;
 
   return (
-    <td className={cellClasses} onClick={() => onToggleRow(task.id)}>
+    <td className={cellClasses} style={style} onClick={() => onToggleRow(task.id)}>
         <div className="flex items-center justify-center h-full">
             <span className={isSelected ? 'hidden' : 'group-hover:hidden'}>{rowNum}</span>
             <input
@@ -60,7 +75,7 @@ const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (i
   );
 };
 
-const NameCellContent: React.FC<{ task: Task, level: number, isEditing: boolean, onEdit: (cell: { taskId: number; column: string } | null) => void, onUpdateTask: TableRowProps['onUpdateTask'], onToggle: (id: number) => void }> = ({ task, level, isEditing, onEdit, onUpdateTask, onToggle }) => {
+const NameCellContent: React.FC<{ task: Task, level: number, isEditing: boolean, onEdit: (cell: { taskId: number; column: string } | null) => void, onUpdateTask: TableRowProps['onUpdateTask'], onToggle: (id: number) => void, textColor?: string }> = ({ task, level, isEditing, onEdit, onUpdateTask, onToggle, textColor }) => {
     const hasChildren = task.children && task.children.length > 0;
     const nameInputRef = useRef<HTMLInputElement>(null);
     const taskNameId = `task-name-${task.id}`;
@@ -101,11 +116,12 @@ const NameCellContent: React.FC<{ task: Task, level: number, isEditing: boolean,
                     onBlur={() => onEdit(null)}
                     onKeyDown={handleNameKeyDown}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-gray-800 font-medium"
+                    className="w-full bg-transparent border-0 p-0 focus:ring-0 focus:outline-none font-medium"
+                    style={{ color: textColor || 'inherit' }}
                 />
             ) : (
                 <div className="min-w-0">
-                  <p id={taskNameId} className="truncate text-gray-800 font-medium" title={task.name}>{task.name}</p>
+                  <p id={taskNameId} className="truncate font-medium" style={{ color: textColor || '#1f2937' }} title={task.name}>{task.name}</p>
                 </div>
             )}
         </div>
@@ -136,7 +152,7 @@ const AssigneeCellContent: React.FC<{ task: Task }> = ({ task }) => (
     </div>
 );
 
-const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell: { taskId: number; column: string } | null) => void, onUpdateTask: TableRowProps['onUpdateTask'] }> = ({ task, isEditing, onEdit, onUpdateTask }) => {
+const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell: { taskId: number; column: string } | null) => void, onUpdateTask: TableRowProps['onUpdateTask'], textColor?: string }> = ({ task, isEditing, onEdit, onUpdateTask, textColor }) => {
     const handleDateChange = (date: Date | undefined) => {
         if (date) {
              // Format Date back to DD/MM/YYYY for storage
@@ -150,7 +166,7 @@ const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell:
     const parsedDate = task.startDate ? parseDate(task.startDate) : undefined;
 
     return (
-        <div onClick={e => e.stopPropagation()} className="w-full">
+        <div onClick={e => e.stopPropagation()} className="w-full" style={{ color: textColor }}>
              <DatePicker 
                 date={parsedDate} 
                 setDate={handleDateChange}
@@ -159,7 +175,7 @@ const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell:
                     if (isOpen) onEdit({ taskId: task.id, column: 'dates' });
                     else onEdit(null);
                 }}
-                className="text-gray-800 font-medium"
+                className="font-medium"
              />
         </div>
     );
@@ -169,18 +185,38 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
   const isSelected = selectedTaskIds.has(task.id);
   const rowNum = rowNumberMap.get(task.id);
   const rowHeightClass = getRowHeight(displayDensity);
+  
+  // Styles
+  const customBg = task.style?.backgroundColor;
+  const customBorder = task.style?.borderColor;
+  const customText = task.style?.textColor;
+
+  const rowStyle: React.CSSProperties = {};
+  if (customBg) rowStyle.backgroundColor = customBg;
+  if (customBorder) {
+      rowStyle.borderBottomColor = customBorder;
+      // Apply to row for consistency, though cells handle the primary visual
+      rowStyle.borderTopColor = customBorder;
+  }
+  if (customText) rowStyle.color = customText;
+  
+  // Determine row classes based on custom styles vs default selection styles
+  let rowClasses = 'group';
+  if (!customBg) {
+     rowClasses += isSelected ? ' bg-blue-50 hover:bg-blue-100' : ' hover:bg-gray-50';
+  }
 
   const getCellContent = (columnId: ColumnId) => {
       const isEditing = editingCell?.taskId === task.id && editingCell?.column === columnId;
       switch (columnId) {
           case 'name':
-              return <NameCellContent task={task} level={level} isEditing={isEditing} onEdit={onEditCell} onUpdateTask={onUpdateTask} onToggle={onToggle} />;
+              return <NameCellContent task={task} level={level} isEditing={isEditing} onEdit={onEditCell} onUpdateTask={onUpdateTask} onToggle={onToggle} textColor={customText} />;
           case 'status':
               return <StatusCellContent task={task} isEditing={isEditing} onEdit={onEditCell} onUpdateTask={onUpdateTask} />;
           case 'assignee':
               return <AssigneeCellContent task={task} />;
           case 'dates':
-              return <DateCellContent task={task} isEditing={isEditing} onEdit={onEditCell} onUpdateTask={onUpdateTask} />;
+              return <DateCellContent task={task} isEditing={isEditing} onEdit={onEditCell} onUpdateTask={onUpdateTask} textColor={customText} />;
           case 'progress':
               return task.progress ? <ProgressDisplay progress={task.progress} /> : null;
           case 'details':
@@ -202,7 +238,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
 
   return (
     <Fragment>
-      <tr className={`group ${isSelected ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}>
+      <tr className={rowClasses} style={rowStyle}>
         <SelectionCell 
             task={task} 
             isSelected={isSelected} 
@@ -210,6 +246,8 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
             rowNum={rowNum}
             isScrolled={isScrolled}
             rowHeightClass={rowHeightClass}
+            customBg={customBg}
+            customBorder={customBorder}
         />
         {columns.map((col, index) => {
             const isLastColumn = index === columns.length - 1;
@@ -240,10 +278,20 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
                 wrapperClass += " px-6";
             }
             
+            // Override border color for cell if row has custom border
+            const cellStyle: React.CSSProperties = {};
+            if (customBorder) {
+                cellStyle.borderBottomColor = customBorder;
+                cellStyle.borderTopColor = customBorder;
+                cellStyle.borderTopWidth = '1px';
+                cellStyle.borderTopStyle = 'solid';
+            }
+
             return (
                  <td 
                     key={col.id}
                     className={cellClasses}
+                    style={cellStyle}
                     onClick={isEditable && !isEditing ? () => onEditCell({ taskId: task.id, column: col.id }) : undefined}
                 >
                     <div className={wrapperClass}>
@@ -252,7 +300,12 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
                 </td>
             )
         })}
-        <td className="border-b border-gray-200"></td>
+        <td className="border-b border-gray-200" style={customBorder ? { 
+            borderBottomColor: customBorder,
+            borderTopColor: customBorder,
+            borderTopWidth: '1px',
+            borderTopStyle: 'solid' 
+        } : {}}></td>
       </tr>
       {task.children && task.isExpanded && task.children?.map(child => (
         <TableRow 

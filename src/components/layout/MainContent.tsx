@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { useProject } from '../../context/ProjectContext';
 import TableView from '../views/table/TableView';
 import BoardView from '../views/board/BoardView';
 import GanttView from '../views/gantt/GanttView';
 import LookaheadView from '../views/lookahead/LookaheadView';
+import SpreadsheetView from '../views/spreadsheet/SpreadsheetView';
 
 const MainContent: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
     const { activeViewMode } = useProject();
@@ -12,6 +14,8 @@ const MainContent: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
         switch(activeViewMode) {
           case 'table':
             return <TableView isScrolled={isScrolled} />;
+          case 'spreadsheet':
+            return <SpreadsheetView />;
           case 'board':
             return <BoardView />;
           case 'gantt':

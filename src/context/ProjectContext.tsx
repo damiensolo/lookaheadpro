@@ -28,8 +28,8 @@ interface ProjectContextType {
   setActiveViewId: React.Dispatch<SetStateAction<string>>;
   defaultViewId: string;
   setDefaultViewId: React.Dispatch<SetStateAction<string>>;
-  activeViewMode: 'table' | 'board' | 'gantt' | 'lookahead';
-  setActiveViewMode: React.Dispatch<SetStateAction<'table' | 'board' | 'gantt' | 'lookahead'>>;
+  activeViewMode: 'table' | 'board' | 'gantt' | 'lookahead' | 'spreadsheet';
+  setActiveViewMode: React.Dispatch<SetStateAction<'table' | 'board' | 'gantt' | 'lookahead' | 'spreadsheet'>>;
   selectedTaskIds: Set<number>;
   setSelectedTaskIds: React.Dispatch<SetStateAction<Set<number>>>;
   editingCell: { taskId: number; column: string } | null;
@@ -67,7 +67,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [views, setViews] = useState<View[]>([initialView]);
   const [activeViewId, setActiveViewId] = useState<string>('default');
   const [defaultViewId, setDefaultViewId] = useState<string>('default');
-  const [activeViewMode, setActiveViewMode] = useState<'table' | 'board' | 'gantt' | 'lookahead'>('table');
+  const [activeViewMode, setActiveViewMode] = useState<'table' | 'board' | 'gantt' | 'lookahead' | 'spreadsheet'>('table');
   
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
   const [editingCell, setEditingCell] = useState<{ taskId: number; column: string } | null>(null);

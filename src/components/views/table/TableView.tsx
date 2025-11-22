@@ -1,18 +1,57 @@
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ColumnId, DisplayDensity } from '../../../types';
+import { ColumnId, DisplayDensity, TaskStyle, Task } from '../../../types';
 import TableRow from './TableRow';
-import { ArrowDownIcon, ArrowUpIcon, SortIcon, ScissorsIcon, CopyIcon, TrashIcon, TypeIcon, EditIcon, ClipboardIcon, SettingsIcon } from '../../common/Icons';
+import { ArrowDownIcon, ArrowUpIcon, SortIcon, ScissorsIcon, CopyIcon, TrashIcon, FillColorIcon, BorderColorIcon, TextColorIcon, ClipboardIcon, SettingsIcon } from '../../common/Icons';
 import { useProject } from '../../../context/ProjectContext';
 import { useProjectData } from '../../../hooks/useProjectData';
 import ViewControls from '../../layout/ViewControls';
 import FieldsMenu from '../../layout/FieldsMenu';
 import { Popover } from '../../common/ui/Popover';
+import ColorPicker from '../../common/ui/ColorPicker';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../common/ui/Tooltip';
 
 interface TableViewProps {
   isScrolled: boolean;
+  density?: DisplayDensity;
 }
+
+// Pastel colors for backgrounds to ensure readability of text
+const BACKGROUND_COLORS = [
+    '#fef2f2', // red-50
+    '#fff7ed', // orange-50
+    '#fffbeb', // amber-50
+    '#f0fdf4', // green-50
+    '#eff6ff', // blue-50
+    '#eef2ff', // indigo-50
+    '#faf5ff', // purple-50
+    '#fdf2f8', // pink-50
+    '#fafafa', // neutral-50
+    '#ecfdf5', // emerald-50
+    '#f0f9ff', // sky-50
+    '#f5f3ff', // violet-50
+    '#fff1f2', // rose-50
+    '#fefce8', // yellow-50
+];
+
+// Saturated colors for text and borders
+const TEXT_BORDER_COLORS = [
+    '#000000', // Black
+    '#4b5563', // gray-600
+    '#dc2626', // red-600
+    '#ea580c', // orange-600
+    '#d97706', // amber-600
+    '#16a34a', // green-600
+    '#0d9488', // teal-600
+    '#2563eb', // blue-600
+    '#4f46e5', // indigo-600
+    '#9333ea', // purple-600
+    '#db2777', // pink-600
+    '#e11d48', // rose-600
+    '#2563eb', // blue-600
+    '#0891b2', // cyan-600
+];
 
 const Resizer: React.FC<{ onMouseDown: (e: React.MouseEvent) => void; isActive: boolean }> = ({ onMouseDown, isActive }) => (
   <div
@@ -31,7 +70,7 @@ const getHeaderHeight = (density: DisplayDensity) => {
   }
 };
 
-const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
+const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
   const { 
     tasks, 
     activeView, 
@@ -48,7 +87,8 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
   } = useProject();
   const { sortedTasks, visibleTaskIds, rowNumberMap } = useProjectData(tasks, activeView, searchTerm);
 
-  const { columns, displayDensity, showGridLines, sort: sortConfig } = activeView;
+  const { columns, displayDensity: contextDensity, showGridLines, sort: sortConfig } = activeView;
+  const displayDensity = density || contextDensity;
 
   const toolbarCheckboxRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLTableRowElement>(null);
@@ -83,6 +123,33 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
       } else {
           setSelectedTaskIds(new Set(visibleTaskIds));
       }
+  };
+
+  const handleBulkStyleUpdate = (newStyle: Partial<TaskStyle>) => {
+      const findTask = (taskList: Task[], id: number): Task | undefined => {
+          for (const task of taskList) {
+              if (task.id === id) return task;
+              if (task.children) {
+                  const found = findTask(task.children, id);
+                  if (found) return found;
+              }
+          }
+          return undefined;
+      };
+
+      selectedTaskIds.forEach(taskId => {
+        // Recursively find the task to ensure we update sub-tasks correctly
+        const task = findTask(tasks, taskId);
+        if (task) {
+            const updatedStyle = { ...task.style, ...newStyle };
+            // Clean up undefined values
+            if (newStyle.backgroundColor === undefined) delete updatedStyle.backgroundColor;
+            if (newStyle.borderColor === undefined) delete updatedStyle.borderColor;
+            if (newStyle.textColor === undefined) delete updatedStyle.textColor;
+
+            handleUpdateTask(taskId, { style: updatedStyle });
+        }
+      });
   };
 
   const handleResize = useCallback((columnId: ColumnId, newWidth: number) => {
@@ -208,27 +275,66 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                             transition={{ duration: 0.2 }}
                             className="flex items-center gap-4 flex-1"
                         >
-                            <div className="flex items-center gap-1 p-1.5 rounded-lg">
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Cut">
-                                    <ScissorsIcon className="w-5 h-5" />
-                                </button>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Copy">
-                                    <CopyIcon className="w-5 h-5" />
-                                </button>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Paste">
-                                    <ClipboardIcon className="w-5 h-5" />
-                                </button>
-                                <button className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all shadow-sm border border-transparent hover:border-red-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-red-500" title="Delete">
-                                    <TrashIcon className="w-5 h-5" />
-                                </button>
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Rename">
-                                    <TypeIcon className="w-5 h-5" />
-                                </button>
-                                <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500" title="Edit">
-                                    <EditIcon className="w-5 h-5" />
-                                </button>
-                            </div>
+                            <TooltipProvider>
+                                <div className="flex items-center gap-1 p-1.5 rounded-lg">
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <ScissorsIcon className="w-5 h-5" />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Cut</TooltipContent>
+                                    </Tooltip>
+                                    
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <CopyIcon className="w-5 h-5" />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Copy</TooltipContent>
+                                    </Tooltip>
+                                    
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-all shadow-sm border border-transparent hover:border-gray-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <ClipboardIcon className="w-5 h-5" />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Paste</TooltipContent>
+                                    </Tooltip>
+                                    
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <button className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all shadow-sm border border-transparent hover:border-red-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-red-500">
+                                                <TrashIcon className="w-5 h-5" />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Delete</TooltipContent>
+                                    </Tooltip>
+                                    
+                                    <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                                    
+                                    <ColorPicker 
+                                        icon={<FillColorIcon className="w-5 h-5" />} 
+                                        label="Background" 
+                                        onColorSelect={(color) => handleBulkStyleUpdate({ backgroundColor: color })} 
+                                        presets={BACKGROUND_COLORS}
+                                    />
+                                    <ColorPicker 
+                                        icon={<BorderColorIcon className="w-5 h-5" />} 
+                                        label="Border" 
+                                        onColorSelect={(color) => handleBulkStyleUpdate({ borderColor: color })} 
+                                        presets={TEXT_BORDER_COLORS}
+                                    />
+                                    <ColorPicker 
+                                        icon={<TextColorIcon className="w-5 h-5" />} 
+                                        label="Text" 
+                                        onColorSelect={(color) => handleBulkStyleUpdate({ textColor: color })} 
+                                        presets={TEXT_BORDER_COLORS}
+                                    />
+                                </div>
+                            </TooltipProvider>
                             <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                 {selectedTaskIds.size} selected
                             </span>
@@ -270,7 +376,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled }) => {
                     <tr ref={headerRef}>
                     <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`}>
                         <div className="flex items-center justify-center h-full text-xs font-semibold text-gray-500">
-                            No.
+                            #
                         </div>
                     </th>
                     {visibleColumns.map((col, index) => {

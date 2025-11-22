@@ -1,14 +1,16 @@
+
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { View } from '../../types';
 import { useProject } from '../../context/ProjectContext';
 import FilterMenu from './FilterMenu';
-import { PlusIcon, MoreHorizontalIcon, TableIcon, BoardIcon, GanttIcon, LookaheadIcon, SearchIcon, FilterIcon } from '../common/Icons';
+import { PlusIcon, MoreHorizontalIcon, TableIcon, BoardIcon, GanttIcon, LookaheadIcon, SearchIcon, FilterIcon, SpreadsheetIcon } from '../common/Icons';
 
-export type ViewMode = 'table' | 'board' | 'gantt' | 'lookahead';
+export type ViewMode = 'table' | 'board' | 'gantt' | 'lookahead' | 'spreadsheet';
 
 const modes: { id: ViewMode; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
   { id: 'table', label: 'Table', icon: TableIcon },
+  { id: 'spreadsheet', label: 'Spreadsheet', icon: SpreadsheetIcon },
   { id: 'board', label: 'Board', icon: BoardIcon },
   { id: 'gantt', label: 'Gantt', icon: GanttIcon },
   { id: 'lookahead', label: 'Lookahead', icon: LookaheadIcon },
