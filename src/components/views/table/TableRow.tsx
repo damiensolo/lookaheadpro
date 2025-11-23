@@ -38,8 +38,6 @@ const getRowHeight = (density: DisplayDensity) => {
 const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (id: number) => void, rowNum?: number, isScrolled: boolean, rowHeightClass: string, customBg?: string, customBorder?: string }> = ({ task, isSelected, onToggleRow, rowNum, isScrolled, rowHeightClass, customBg, customBorder }) => {
   const taskNameId = `task-name-${task.id}`;
   
-  // If custom background is set, use it. Otherwise fall back to selection state colors or defaults.
-  
   let bgClass = '';
   let style: React.CSSProperties = {};
 
@@ -49,18 +47,13 @@ const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (i
     bgClass = isSelected ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-white group-hover:bg-gray-50';
   }
   
-  if (customBorder) {
-      style.borderBottomColor = customBorder;
-      style.borderTopColor = customBorder;
-      style.borderTopWidth = '1px';
-      style.borderTopStyle = 'solid';
-  }
+  // Using absolute styling for borders, so no border styles here for now, handled via structure below
 
-  const cellClasses = `sticky left-0 z-10 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-b border-r border-gray-200 transition-shadow duration-200 cursor-pointer ${bgClass} ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`;
+  const cellClasses = `sticky left-0 z-10 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-r border-gray-200 transition-shadow duration-200 cursor-pointer relative ${!customBorder ? 'border-b' : ''} ${bgClass} ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`;
 
   return (
     <td className={cellClasses} style={style} onClick={() => onToggleRow(task.id)}>
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center h-full relative z-20">
             <span className={isSelected ? 'hidden' : 'group-hover:hidden'}>{rowNum}</span>
             <input
               type="checkbox"
@@ -71,6 +64,12 @@ const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (i
               className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mx-auto ${isSelected ? 'block' : 'hidden group-hover:block'}`}
             />
         </div>
+        {customBorder && (
+            <>
+                <div className="absolute top-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                <div className="absolute bottom-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+            </>
+        )}
     </td>
   );
 };
@@ -193,11 +192,6 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
 
   const rowStyle: React.CSSProperties = {};
   if (customBg) rowStyle.backgroundColor = customBg;
-  if (customBorder) {
-      rowStyle.borderBottomColor = customBorder;
-      // Apply to row for consistency, though cells handle the primary visual
-      rowStyle.borderTopColor = customBorder;
-  }
   if (customText) rowStyle.color = customText;
   
   // Determine row classes based on custom styles vs default selection styles
@@ -254,10 +248,14 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
             const isEditing = editingCell?.taskId === task.id && editingCell?.column === col.id;
             const isEditable = isColumnEditable(col.id);
             
-            let cellClasses = `${rowHeightClass} p-0`;
+            let cellClasses = `${rowHeightClass} p-0 relative`; // Added relative
             if (isEditable) cellClasses += ' cursor-pointer';
 
-            cellClasses += ' border-b border-gray-200';
+            // Use border-b unless custom border is present, then we use absolute div
+            if (!customBorder) {
+                cellClasses += ' border-b border-gray-200';
+            }
+            
             if (showGridLines && !isLastColumn) {
               cellClasses += ' border-r border-gray-200';
             }
@@ -271,41 +269,39 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
                 }
             }
 
-            let wrapperClass = "flex items-center h-full w-full group"; 
+            let wrapperClass = "flex items-center h-full w-full group relative z-20"; 
             if (col.id === 'details') {
                 wrapperClass += " justify-center";
             } else {
                 wrapperClass += " px-6";
             }
             
-            // Override border color for cell if row has custom border
-            const cellStyle: React.CSSProperties = {};
-            if (customBorder) {
-                cellStyle.borderBottomColor = customBorder;
-                cellStyle.borderTopColor = customBorder;
-                cellStyle.borderTopWidth = '1px';
-                cellStyle.borderTopStyle = 'solid';
-            }
-
             return (
                  <td 
                     key={col.id}
                     className={cellClasses}
-                    style={cellStyle}
                     onClick={isEditable && !isEditing ? () => onEditCell({ taskId: task.id, column: col.id }) : undefined}
                 >
                     <div className={wrapperClass}>
                       {getCellContent(col.id)}
                     </div>
+                    {customBorder && (
+                        <>
+                            <div className="absolute top-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                            <div className="absolute bottom-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                        </>
+                    )}
                 </td>
             )
         })}
-        <td className="border-b border-gray-200" style={customBorder ? { 
-            borderBottomColor: customBorder,
-            borderTopColor: customBorder,
-            borderTopWidth: '1px',
-            borderTopStyle: 'solid' 
-        } : {}}></td>
+        <td className={`relative ${!customBorder ? 'border-b border-gray-200' : ''}`}>
+             {customBorder && (
+                <>
+                    <div className="absolute top-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                    <div className="absolute bottom-0 left-0 right-0 h-px z-10 pointer-events-none" style={{ backgroundColor: customBorder }} />
+                </>
+            )}
+        </td>
       </tr>
       {task.children && task.isExpanded && task.children?.map(child => (
         <TableRow 

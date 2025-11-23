@@ -371,11 +371,14 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
             </div>
 
             <div className="overflow-x-auto flex-1">
-                <table className="w-full table-fixed text-sm text-left text-gray-500 whitespace-nowrap border-collapse">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-20">
+                <table 
+                    className="w-full table-fixed text-left text-gray-500 whitespace-nowrap border-collapse"
+                    style={{ fontSize: activeView.fontSize }}
+                >
+                <thead className="uppercase bg-gray-50 sticky top-0 z-20">
                     <tr ref={headerRef}>
                     <th scope="col" className={`sticky left-0 bg-gray-50 z-30 ${headerHeightClass} px-2 w-14 border-b border-gray-200 border-r border-gray-200 transition-shadow duration-200 ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`}>
-                        <div className="flex items-center justify-center h-full text-xs font-semibold text-gray-500">
+                        <div className="flex items-center justify-center h-full font-semibold text-gray-500">
                             #
                         </div>
                     </th>
@@ -385,7 +388,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
                         <th 
                             key={col.id} 
                             scope="col" 
-                            className={`${headerHeightClass} px-6 font-semibold border-b border-gray-200 relative group cursor-pointer align-middle ${showGridLines && !isLastVisibleColumn ? 'border-r border-gray-200' : ''}`}
+                            className={`${headerHeightClass} px-6 font-semibold border-b border-gray-200 relative group cursor-pointer align-middle text-gray-700 ${showGridLines && !isLastVisibleColumn ? 'border-r border-gray-200' : ''}`}
                             style={{ width: col.width, zIndex: 5 }}
                             onClick={(e) => {
                             if (col.id === 'details') return;

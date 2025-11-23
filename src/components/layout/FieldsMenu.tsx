@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ColumnId, DisplayDensity } from '../../types';
-import { GripVerticalIcon } from '../common/Icons';
+import { GripVerticalIcon, MinusIcon, PlusIcon } from '../common/Icons';
 import { useProject } from '../../context/ProjectContext';
 import { DEFAULT_COLUMNS } from '../../constants';
 import { cn } from '../../lib/utils';
@@ -29,8 +30,8 @@ const DensityOption: React.FC<{
 
 
 const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableClickOutside }) => {
-  const { activeView, setColumns, setDisplayDensity, setShowGridLines } = useProject();
-  const { columns, displayDensity, showGridLines } = activeView;
+  const { activeView, setColumns, setDisplayDensity, setShowGridLines, setFontSize } = useProject();
+  const { columns, displayDensity, showGridLines, fontSize } = activeView;
   const menuRef = useRef<HTMLDivElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
@@ -105,6 +106,30 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableCl
           <DensityOption label="Compact" density="compact" current={displayDensity} onClick={setDisplayDensity} />
           <DensityOption label="Standard" density="standard" current={displayDensity} onClick={setDisplayDensity} />
           <DensityOption label="Comfortable" density="comfortable" current={displayDensity} onClick={setDisplayDensity} />
+        </div>
+      </div>
+
+      {/* Font Size Section */}
+      <div className="p-3 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-1">
+            <h4 className="text-sm font-medium text-gray-700">Font Size</h4>
+            <div className="flex items-center gap-2 bg-gray-100 rounded-md p-1">
+                <button 
+                    onClick={() => setFontSize(Math.max(10, fontSize - 1))}
+                    disabled={fontSize <= 10}
+                    className="p-1 hover:bg-white rounded shadow-sm disabled:opacity-50 disabled:hover:bg-transparent disabled:shadow-none"
+                >
+                    <MinusIcon className="w-3 h-3 text-gray-600" />
+                </button>
+                <span className="text-xs font-medium text-gray-700 w-8 text-center">{fontSize}px</span>
+                <button 
+                    onClick={() => setFontSize(Math.min(20, fontSize + 1))}
+                    disabled={fontSize >= 20}
+                    className="p-1 hover:bg-white rounded shadow-sm disabled:opacity-50 disabled:hover:bg-transparent disabled:shadow-none"
+                >
+                    <PlusIcon className="w-3 h-3 text-gray-600" />
+                </button>
+            </div>
         </div>
       </div>
       

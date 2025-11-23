@@ -129,4 +129,5 @@ export interface View {
   showGridLines: boolean;
   spreadsheetData?: BudgetLineItem[];
   spreadsheetColumns?: SpreadsheetColumn[];
+  fontSize: number;
 }

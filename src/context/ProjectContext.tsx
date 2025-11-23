@@ -17,6 +17,7 @@ const initialView: View = {
   columns: DEFAULT_COLUMNS,
   displayDensity: 'comfortable',
   showGridLines: false,
+  fontSize: 12,
 };
 
 interface ProjectContextType {
@@ -51,6 +52,7 @@ interface ProjectContextType {
   setColumns: (updater: SetStateAction<Column[]>) => void;
   setDisplayDensity: (density: DisplayDensity) => void;
   setShowGridLines: (show: boolean) => void;
+  setFontSize: (size: number) => void;
   handleSort: (columnId: ColumnId) => void;
   handleUpdateTask: (taskId: number, updatedValues: Partial<Omit<Task, 'id' | 'children'>>) => void;
   handlePriorityChange: (taskId: number, priority: Priority) => void;
@@ -95,6 +97,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
   const setDisplayDensity = (density: View['displayDensity']) => updateView({ displayDensity: density });
   const setShowGridLines = (show: boolean) => updateView({ showGridLines: show });
+  const setFontSize = (size: number) => updateView({ fontSize: size });
 
   const handleSort = (columnId: ColumnId) => {
     const newSort: SortConfig = {
@@ -192,6 +195,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     setColumns,
     setDisplayDensity,
     setShowGridLines,
+    setFontSize,
     handleSort,
     handleUpdateTask,
     handlePriorityChange,
