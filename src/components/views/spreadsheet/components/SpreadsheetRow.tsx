@@ -85,7 +85,7 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
                     <td 
                         key={col.id}
                         onClick={() => onCellClick(row.id, col.id)}
-                        className={`border-r border-gray-200 px-2 text-gray-600 relative cursor-cell 
+                        className={`border-r border-gray-200 px-2 text-gray-600 relative cursor-default 
                             ${!customBorder ? 'border-b' : ''}
                             ${col.align === 'right' ? 'text-right' : 'text-left'}
                             ${col.id === 'name' || col.id === 'totalBudget' ? 'font-medium text-gray-900' : ''}
