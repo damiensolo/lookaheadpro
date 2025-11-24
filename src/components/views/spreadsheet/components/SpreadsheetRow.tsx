@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BudgetLineItem, SpreadsheetColumn } from '../../../../types';
 import { AlertTriangleIcon } from '../../../common/Icons';
@@ -17,6 +16,7 @@ interface SpreadsheetRowProps {
     fontSize: number;
     onRowHeaderClick: (id: string, multiSelect: boolean) => void;
     onCellClick: (rowId: string, colId: string) => void;
+    onContextMenu: (e: React.MouseEvent, type: 'row' | 'cell', targetId: string, secondaryId?: string) => void;
 }
 
 const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
@@ -27,7 +27,8 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
     isScrolled,
     fontSize,
     onRowHeaderClick,
-    onCellClick
+    onCellClick,
+    onContextMenu
 }) => {
     const isRowFocused = focusedCell?.rowId === row.id;
     const customStyle = row.style || {};
@@ -47,6 +48,7 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
             {/* Row Number Cell */}
             <td 
                 onClick={(e) => onRowHeaderClick(row.id, e.metaKey || e.ctrlKey)}
+                onContextMenu={(e) => onContextMenu(e, 'row', row.id)}
                 className={`sticky left-0 z-20 border-r border-gray-200 text-center cursor-pointer transition-colors p-0 relative
                     ${!customBorder ? 'border-b' : ''}
                     ${isSelected ? 'bg-blue-600 text-white' : isRowFocused ? 'bg-blue-100 text-blue-800 font-semibold' : 'bg-white text-gray-500 group-hover:bg-gray-50'}
@@ -85,6 +87,7 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
                     <td 
                         key={col.id}
                         onClick={() => onCellClick(row.id, col.id)}
+                        onContextMenu={(e) => onContextMenu(e, 'cell', row.id, col.id)}
                         className={`border-r border-gray-200 px-2 text-gray-600 relative cursor-default 
                             ${!customBorder ? 'border-b' : ''}
                             ${col.align === 'right' ? 'text-right' : 'text-left'}

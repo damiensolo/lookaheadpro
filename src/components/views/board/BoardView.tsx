@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Task, Status } from '../../../types';
+import { Task, Status, Priority } from '../../../types';
 import { useProject } from '../../../context/ProjectContext';
 import { useProjectData } from '../../../hooks/useProjectData';
 import ViewControls from '../../layout/ViewControls';
@@ -27,6 +26,7 @@ const BoardView: React.FC = () => {
     const { sortedTasks } = useProjectData(tasks, activeView, searchTerm);
     const allTasks = flattenTasks(sortedTasks);
 
+    // Removed Status.Planned, Status.New will be labeled "Draft"
     const statusColumns: Status[] = [Status.New, Status.InProgress, Status.InReview, Status.Completed];
 
     const tasksByStatus = statusColumns.reduce((acc, status) => {

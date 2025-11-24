@@ -60,7 +60,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ item, isActive, onClick }) =>
             e.preventDefault();
             onClick();
         }}
-        className={`relative flex flex-col items-center justify-center gap-1.5 h-[80px] text-xs font-medium transition-colors duration-200 ${isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-800'}`}
+        className={`relative flex flex-col items-center justify-center gap-1.5 h-[80px] text-xs transition-colors duration-200 ${isActive ? 'text-gray-900 font-bold' : 'text-gray-500 hover:text-gray-800 font-medium'}`}
     >
         {item.icon}
         <span>{item.label}</span>

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { BudgetLineItemStyle, SpreadsheetColumn } from '../../../types';
 import { MOCK_BUDGET_DATA } from '../../../data';
@@ -6,6 +5,9 @@ import { useProject } from '../../../context/ProjectContext';
 import SpreadsheetToolbar from './components/SpreadsheetToolbar';
 import SpreadsheetHeader from './components/SpreadsheetHeader';
 import SpreadsheetRow from './components/SpreadsheetRow';
+import { ContextMenu, ContextMenuItem } from '../../common/ui/ContextMenu';
+import { ScissorsIcon, CopyIcon, ClipboardIcon, TrashIcon, PlusIcon, ArrowUpIcon, ArrowDownIcon, ChevronLeftIcon, ChevronRightIcon, FillColorIcon, BorderColorIcon } from '../../common/Icons';
+import { BACKGROUND_COLORS, TEXT_BORDER_COLORS } from '../../../constants/designTokens';
 
 // --- Constants ---
 
@@ -56,6 +58,15 @@ const SpreadsheetView: React.FC = () => {
   const toolbarCheckboxRef = useRef<HTMLInputElement>(null);
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
   const activeResizerId = useRef<string | null>(null);
+
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{
+      visible: boolean;
+      position: { x: number; y: number };
+      type: 'row' | 'column' | 'cell';
+      targetId: string;
+      secondaryId?: string; // For cell context (columnId)
+  } | null>(null);
 
   const isAllSelected = selectedRowIds.size === budgetData.length;
   const isSomeSelected = selectedRowIds.size > 0 && selectedRowIds.size < budgetData.length;
@@ -109,6 +120,141 @@ const SpreadsheetView: React.FC = () => {
       // Clear row selection when focusing a cell
       setSelectedRowIds(new Set()); 
   };
+
+  // Context Menu Handler
+  const handleContextMenu = useCallback((e: React.MouseEvent, type: 'row' | 'column' | 'cell', targetId: string, secondaryId?: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Auto-select/focus when context menu is opened
+      if (type === 'row') {
+          if (!selectedRowIds.has(targetId)) {
+              handleRowHeaderClick(targetId, false);
+          }
+      } else if (type === 'cell' && secondaryId) {
+          handleCellClick(targetId, secondaryId);
+      }
+
+      setContextMenu({
+          visible: true,
+          position: { x: e.clientX, y: e.clientY },
+          type,
+          targetId,
+          secondaryId
+      });
+  }, [selectedRowIds]);
+
+  const handleBulkStyleUpdate = (newStyle: Partial<BudgetLineItemStyle>, targetIds?: Set<string>) => {
+    const idsToUpdate = targetIds || selectedRowIds;
+    const updatedData = budgetData.map(item => {
+        if (idsToUpdate.has(item.id)) {
+            const currentStyle = item.style || {};
+            const mergedStyle = { ...currentStyle, ...newStyle };
+            
+            // clean up undefined values to allow "unsetting"
+            (Object.keys(newStyle) as (keyof BudgetLineItemStyle)[]).forEach(key => {
+                if (newStyle[key] === undefined) {
+                    delete mergedStyle[key];
+                }
+            });
+
+            return { ...item, style: mergedStyle };
+        }
+        return item;
+    });
+    updateView({ spreadsheetData: updatedData });
+  };
+
+  // Actions Handlers (Mocked for functionality)
+  const handleDeleteRow = () => {
+      if (contextMenu?.type === 'row' || contextMenu?.type === 'cell') {
+          const idsToDelete = contextMenu.type === 'row' && selectedRowIds.size > 0 ? selectedRowIds : new Set([contextMenu.targetId]);
+          const newData = budgetData.filter(row => !idsToDelete.has(row.id));
+          updateView({ spreadsheetData: newData });
+          setSelectedRowIds(new Set());
+      }
+  };
+
+  const getContextMenuItems = (): ContextMenuItem[] => {
+      if (!contextMenu) return [];
+
+      const commonActions: ContextMenuItem[] = [
+          { label: 'Cut', icon: <ScissorsIcon className="w-4 h-4"/>, shortcut: 'Ctrl+X', onClick: () => console.log('Cut') },
+          { label: 'Copy', icon: <CopyIcon className="w-4 h-4"/>, shortcut: 'Ctrl+C', onClick: () => console.log('Copy') },
+          { label: 'Paste', icon: <ClipboardIcon className="w-4 h-4"/>, shortcut: 'Ctrl+V', onClick: () => console.log('Paste') },
+      ];
+
+      if (contextMenu.type === 'row') {
+          const targetRows = selectedRowIds.has(contextMenu.targetId) ? selectedRowIds : new Set([contextMenu.targetId]);
+          
+          // Generate submenu items for background colors
+          const bgSubmenu: ContextMenuItem[] = [
+              {
+                  label: 'No Color',
+                  icon: <div className="w-3 h-3 rounded-full border border-gray-300 relative overflow-hidden"><div className="absolute inset-0 bg-red-500 rotate-45 w-[1px] left-1/2 -translate-x-1/2" /></div>,
+                  onClick: () => handleBulkStyleUpdate({ backgroundColor: undefined }, targetRows)
+              },
+              ...BACKGROUND_COLORS.map(color => ({
+                  label: ' ',
+                  icon: <div className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: color }} />,
+                  onClick: () => handleBulkStyleUpdate({ backgroundColor: color }, targetRows)
+              }))
+          ];
+
+          // Generate submenu items for border colors
+          const borderSubmenu: ContextMenuItem[] = [
+              {
+                  label: 'No Border',
+                  icon: <div className="w-3 h-3 rounded-full border border-gray-300 relative overflow-hidden"><div className="absolute inset-0 bg-red-500 rotate-45 w-[1px] left-1/2 -translate-x-1/2" /></div>,
+                  onClick: () => handleBulkStyleUpdate({ borderColor: undefined }, targetRows)
+              },
+              ...TEXT_BORDER_COLORS.map(color => ({
+                  label: ' ',
+                  icon: <div className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: color }} />,
+                  onClick: () => handleBulkStyleUpdate({ borderColor: color }, targetRows)
+              }))
+          ];
+
+          return [
+              ...commonActions,
+              { separator: true } as any,
+              { 
+                  label: 'Background Color', 
+                  icon: <FillColorIcon className="w-4 h-4 text-gray-600"/>, 
+                  submenu: bgSubmenu 
+              },
+              { 
+                  label: 'Border Color', 
+                  icon: <BorderColorIcon className="w-4 h-4 text-gray-600"/>, 
+                  submenu: borderSubmenu 
+              },
+              { separator: true } as any,
+              { label: 'Insert 1 row above', icon: <ArrowUpIcon className="w-4 h-4"/>, onClick: () => console.log('Insert row above', contextMenu.targetId) },
+              { label: 'Insert 1 row below', icon: <ArrowDownIcon className="w-4 h-4"/>, onClick: () => console.log('Insert row below', contextMenu.targetId) },
+              { separator: true } as any,
+              { label: 'Delete row', icon: <TrashIcon className="w-4 h-4"/>, danger: true, onClick: handleDeleteRow },
+          ];
+      }
+
+      if (contextMenu.type === 'column') {
+          return [
+              ...commonActions,
+              { separator: true } as any,
+              { label: 'Insert 1 column left', icon: <ChevronLeftIcon className="w-4 h-4"/>, onClick: () => console.log('Insert col left', contextMenu.targetId) },
+              { label: 'Insert 1 column right', icon: <ChevronRightIcon className="w-4 h-4"/>, onClick: () => console.log('Insert col right', contextMenu.targetId) },
+              { separator: true } as any,
+              { label: 'Delete column', icon: <TrashIcon className="w-4 h-4"/>, danger: true, onClick: () => console.log('Delete col', contextMenu.targetId) },
+          ];
+      }
+
+      // Cell context
+      return [
+          ...commonActions,
+          { separator: true } as any,
+          { label: 'Delete row', icon: <TrashIcon className="w-4 h-4"/>, danger: true, onClick: handleDeleteRow },
+      ];
+  };
+
 
   // Keyboard Navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -187,26 +333,6 @@ const SpreadsheetView: React.FC = () => {
     document.body.classList.add('grabbing');
   };
 
-  const handleBulkStyleUpdate = (newStyle: Partial<BudgetLineItemStyle>) => {
-    const updatedData = budgetData.map(item => {
-        if (selectedRowIds.has(item.id)) {
-            const currentStyle = item.style || {};
-            const mergedStyle = { ...currentStyle, ...newStyle };
-            
-            // clean up undefined values to allow "unsetting"
-            (Object.keys(newStyle) as (keyof BudgetLineItemStyle)[]).forEach(key => {
-                if (newStyle[key] === undefined) {
-                    delete mergedStyle[key];
-                }
-            });
-
-            return { ...item, style: mergedStyle };
-        }
-        return item;
-    });
-    updateView({ spreadsheetData: updatedData });
-  };
-
   const totals = useMemo(() => {
     return budgetData.reduce((acc, item) => ({
       effortHours: acc.effortHours + (item.effortHours || 0),
@@ -229,7 +355,7 @@ const SpreadsheetView: React.FC = () => {
                 toolbarCheckboxRef={toolbarCheckboxRef}
                 hasRowSelection={selectedRowIds.size > 0}
                 selectedCount={selectedRowIds.size}
-                onStyleUpdate={handleBulkStyleUpdate}
+                onStyleUpdate={(style) => handleBulkStyleUpdate(style)}
             />
       
             <div className="flex-grow overflow-auto relative select-none" ref={scrollContainerRef}>
@@ -244,6 +370,7 @@ const SpreadsheetView: React.FC = () => {
                     isScrolled={isScrolled}
                     fontSize={activeView.fontSize}
                     onMouseDown={onMouseDown}
+                    onContextMenu={(e, colId) => handleContextMenu(e, 'column', colId)}
                 />
                 
                 <tbody>
@@ -258,6 +385,7 @@ const SpreadsheetView: React.FC = () => {
                         fontSize={activeView.fontSize}
                         onRowHeaderClick={handleRowHeaderClick}
                         onCellClick={handleCellClick}
+                        onContextMenu={handleContextMenu}
                     />
                 ))}
                 </tbody>
@@ -290,6 +418,15 @@ const SpreadsheetView: React.FC = () => {
             </table>
             </div>
         </div>
+        
+        {/* Context Menu */}
+        {contextMenu && contextMenu.visible && (
+            <ContextMenu
+                position={contextMenu.position}
+                items={getContextMenuItems()}
+                onClose={() => setContextMenu(null)}
+            />
+        )}
     </div>
   );
 };

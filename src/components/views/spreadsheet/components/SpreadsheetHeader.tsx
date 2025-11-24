@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SpreadsheetColumn } from '../../../../types';
 import { Resizer } from '../../../common/ui/Resizer';
@@ -10,6 +9,7 @@ interface SpreadsheetHeaderProps {
     isScrolled: boolean;
     fontSize: number;
     onMouseDown: (columnId: string) => (e: React.MouseEvent) => void;
+    onContextMenu: (e: React.MouseEvent, columnId: string) => void;
 }
 
 const SpreadsheetHeader: React.FC<SpreadsheetHeaderProps> = ({
@@ -18,7 +18,8 @@ const SpreadsheetHeader: React.FC<SpreadsheetHeaderProps> = ({
     resizingColumnId,
     isScrolled,
     fontSize,
-    onMouseDown
+    onMouseDown,
+    onContextMenu
 }) => {
     return (
         <thead className="bg-gray-50 text-gray-700 font-semibold sticky top-0 z-30">
@@ -35,6 +36,7 @@ const SpreadsheetHeader: React.FC<SpreadsheetHeaderProps> = ({
                         className={`border-b border-r border-gray-200 px-2 whitespace-nowrap uppercase font-semibold relative group ${col.align === 'right' ? 'text-right' : 'text-left'} 
                             ${focusedCell?.colId === col.id ? 'bg-blue-100 text-blue-800' : 'bg-gray-50 text-gray-700'}`}
                         style={{ width: col.width, fontSize }}
+                        onContextMenu={(e) => onContextMenu(e, col.id)}
                     >
                         <div className="flex items-center h-full w-full overflow-hidden">
                             {col.align === 'right' ? <span className="w-full truncate">{col.label}</span> : <span className="truncate">{col.label}</span>}
