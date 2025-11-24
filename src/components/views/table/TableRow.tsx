@@ -1,4 +1,5 @@
 
+
 import React, { Fragment, useEffect, useRef } from 'react';
 import { Task, Status, Column, ColumnId, DisplayDensity } from '../../../types';
 import { EyeIcon, ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../../common/Icons';
@@ -47,9 +48,7 @@ const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (i
     bgClass = isSelected ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-white group-hover:bg-gray-50';
   }
   
-  // Using absolute styling for borders, so no border styles here for now, handled via structure below
-
-  const cellClasses = `sticky left-0 z-10 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-r border-gray-200 transition-shadow duration-200 cursor-pointer relative ${!customBorder ? 'border-b' : ''} ${bgClass} ${isScrolled ? 'shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)]' : ''}`;
+  const cellClasses = `sticky left-0 z-30 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-r border-gray-200 transition-shadow duration-200 cursor-pointer relative ${!customBorder ? 'border-b' : ''} ${bgClass} ${isScrolled ? 'shadow-[4px_0_8px_-4px_rgba(0,0,0,0.15)]' : ''}`;
 
   return (
     <td className={cellClasses} style={style} onClick={() => onToggleRow(task.id)}>
@@ -197,7 +196,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
   // Determine row classes based on custom styles vs default selection styles
   let rowClasses = 'group';
   if (!customBg) {
-     rowClasses += isSelected ? ' bg-blue-50 hover:bg-blue-100' : ' hover:bg-gray-50';
+     rowClasses += isSelected ? ' bg-blue-50 hover:bg-blue-100' : ' bg-white hover:bg-gray-50';
   }
 
   const getCellContent = (columnId: ColumnId) => {
