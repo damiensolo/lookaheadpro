@@ -49,13 +49,18 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
             <td 
                 onClick={(e) => onRowHeaderClick(row.id, e.metaKey || e.ctrlKey)}
                 onContextMenu={(e) => onContextMenu(e, 'row', row.id)}
-                className={`sticky left-0 z-30 border-r border-gray-200 text-center cursor-pointer transition-colors p-0 relative bg-white
+                className={`sticky left-0 z-40 border-r border-gray-200 text-center cursor-pointer transition-shadow duration-200 p-0 relative
                     ${!customBorder ? 'border-b' : ''}
-                    ${isSelected ? 'bg-blue-600 text-white' : isRowFocused ? 'bg-blue-100 text-blue-800 font-semibold' : 'text-gray-500 group-hover:bg-gray-50'}
-                    ${isScrolled ? 'shadow-[4px_0_8px_-4px_rgba(0,0,0,0.15)]' : ''}
+                    ${
+                        isSelected
+                        ? 'bg-blue-600 text-white'
+                        : isRowFocused
+                        ? 'bg-blue-100 text-blue-800 font-semibold'
+                        : 'bg-white text-gray-500 group-hover:bg-gray-50'
+                    }
+                    ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}
                 `}
                 style={{
-                    backgroundColor: isSelected ? undefined : isRowFocused ? undefined : customStyle.backgroundColor,
                     color: isSelected ? undefined : isRowFocused ? undefined : customStyle.textColor,
                 }}
             >

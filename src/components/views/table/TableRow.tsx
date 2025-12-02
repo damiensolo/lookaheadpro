@@ -39,19 +39,13 @@ const getRowHeight = (density: DisplayDensity) => {
 const SelectionCell: React.FC<{ task: Task, isSelected: boolean, onToggleRow: (id: number) => void, rowNum?: number, isScrolled: boolean, rowHeightClass: string, customBg?: string, customBorder?: string }> = ({ task, isSelected, onToggleRow, rowNum, isScrolled, rowHeightClass, customBg, customBorder }) => {
   const taskNameId = `task-name-${task.id}`;
   
-  let bgClass = '';
-  let style: React.CSSProperties = {};
-
-  if (customBg) {
-    style.backgroundColor = customBg;
-  } else {
-    bgClass = isSelected ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-white group-hover:bg-gray-50';
-  }
+  // This logic ensures the cell is always opaque, ignoring customBg from the row.
+  const bgClass = isSelected ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-white group-hover:bg-gray-50';
   
-  const cellClasses = `sticky left-0 z-30 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-r border-gray-200 transition-shadow duration-200 cursor-pointer relative ${!customBorder ? 'border-b' : ''} ${bgClass} ${isScrolled ? 'shadow-[4px_0_8px_-4px_rgba(0,0,0,0.15)]' : ''}`;
+  const cellClasses = `sticky left-0 z-40 ${rowHeightClass} px-2 w-14 text-center text-gray-500 border-r border-gray-200 transition-shadow duration-200 cursor-pointer relative ${!customBorder ? 'border-b' : ''} ${bgClass} ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`;
 
   return (
-    <td className={cellClasses} style={style} onClick={() => onToggleRow(task.id)}>
+    <td className={cellClasses} onClick={() => onToggleRow(task.id)}>
         <div className="flex items-center justify-center h-full relative z-20">
             <span className={isSelected ? 'hidden' : 'group-hover:hidden'}>{rowNum}</span>
             <input
