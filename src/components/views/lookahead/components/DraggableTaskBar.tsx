@@ -9,9 +9,10 @@ interface DraggableTaskBarProps {
     dayWidth: number;
     onUpdateTask: (taskId: string | number, newStart: string, newFinish: string) => void;
     onDayClick: (task: LookaheadTask, date: Date) => void;
+    offsetLeft?: number;
 }
 
-const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartDate, dayWidth, onUpdateTask, onDayClick }) => {
+const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartDate, dayWidth, onUpdateTask, onDayClick, offsetLeft = 0 }) => {
     const [dragState, setDragState] = useState<{
         type: 'move' | 'resize-left' | 'resize-right';
         startX: number;
@@ -110,7 +111,7 @@ const DraggableTaskBar: React.FC<DraggableTaskBarProps> = ({ task, projectStartD
                 ${styles.wrapper}
                 ${dragState?.type === 'move' ? 'cursor-grabbing opacity-80 z-30' : 'cursor-grab'}`}
             style={{ 
-                left: `${offsetDays * dayWidth}px`, 
+                left: `${(offsetDays * dayWidth) + offsetLeft}px`, 
                 width: `${barWidth}px`,
             }}
             onMouseDown={(e) => handleMouseDown(e, 'move')}

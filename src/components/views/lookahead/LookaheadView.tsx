@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LookaheadTask, Constraint, ConstraintStatus, ConstraintType, WeatherForecast } from './types';
 import { PLANNER_TASKS, MOCK_WEATHER } from './constants';
@@ -291,6 +292,7 @@ const LookaheadView: React.FC = () => {
                             dayWidth={DAY_WIDTH}
                             onUpdateTask={handleUpdateTaskDates}
                             onDayClick={handleDayClick}
+                            offsetLeft={DAY_WIDTH} // Add offset for the padding column
                         />
                     </div>
                 </div>
@@ -311,7 +313,7 @@ const LookaheadView: React.FC = () => {
                 {/* Main Planner */}
                 <div className="flex-grow overflow-hidden relative flex">
                     <div ref={scrollContainerRef} className="flex-grow overflow-auto min-w-0">
-                        <div className="relative" style={{ minWidth: `${totalLeftPanelWidth + (totalDays * DAY_WIDTH)}px`}}>
+                        <div className="relative" style={{ minWidth: `${totalLeftPanelWidth + (totalDays * DAY_WIDTH) + DAY_WIDTH}px`}}>
                             {/* Unified Background Grid */}
                             <div
                                 className="absolute top-0 left-0 w-full h-full pt-[80px] flex"
@@ -321,8 +323,10 @@ const LookaheadView: React.FC = () => {
                                 <div style={{ width: `${totalLeftPanelWidth}px` }} className="flex-shrink-0 sticky left-0 bg-white z-10"></div>
                                 <div
                                     className="flex-grow grid"
-                                    style={{ gridTemplateColumns: `repeat(${totalDays}, ${DAY_WIDTH}px)` }}
+                                    style={{ gridTemplateColumns: `${DAY_WIDTH}px repeat(${totalDays}, ${DAY_WIDTH}px)` }}
                                 >
+                                    {/* Padding Block */}
+                                    <div className="h-full border-r border-gray-200 bg-gray-50/50"></div>
                                     {Array.from({ length: totalDays }).map((_, i) => {
                                         const date = addDays(projectStartDate, i);
                                         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -338,6 +342,8 @@ const LookaheadView: React.FC = () => {
                                 <div className="flex border-b border-gray-200" style={{ height: '30px' }}>
                                     <div className={`sticky left-0 bg-gray-50 flex border-r-2 border-gray-200 transition-shadow ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}`} style={{ width: `${totalLeftPanelWidth}px` }}></div>
                                     <div className="flex-grow flex">
+                                        {/* Padding Block */}
+                                        <div className="flex-shrink-0 border-r border-gray-200 bg-gray-50/50" style={{ width: `${DAY_WIDTH}px` }}></div>
                                         {weekHeaders.map((week, i) => (
                                             <div key={i} className="flex items-center justify-center border-r border-gray-200" style={{ width: `${week.days * DAY_WIDTH}px`}}>{week.label}</div>
                                         ))}
@@ -358,8 +364,10 @@ const LookaheadView: React.FC = () => {
                                      </div>
                                      <div
                                         className="flex-grow grid"
-                                        style={{ gridTemplateColumns: `repeat(${totalDays}, ${DAY_WIDTH}px)` }}
+                                        style={{ gridTemplateColumns: `${DAY_WIDTH}px repeat(${totalDays}, ${DAY_WIDTH}px)` }}
                                     >
+                                        {/* Padding Block */}
+                                        <div className="border-r border-gray-200 bg-gray-50/50"></div>
                                         {Array.from({length: totalDays}).map((_, i) => {
                                             const date = addDays(projectStartDate, i);
                                             const dateString = formatDateISO(date);

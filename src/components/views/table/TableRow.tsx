@@ -1,5 +1,4 @@
 
-
 import React, { Fragment, useEffect, useRef } from 'react';
 import { Task, Status, Column, ColumnId, DisplayDensity } from '../../../types';
 import { EyeIcon, ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../../common/Icons';
@@ -23,6 +22,7 @@ interface TableRowProps {
   displayDensity: DisplayDensity;
   showGridLines: boolean;
   onShowDetails: (taskId: number) => void;
+  activeDetailedTaskId: number | null;
 }
 
 const getRowHeight = (density: DisplayDensity) => {
@@ -173,7 +173,7 @@ const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell:
     );
 };
 
-const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap, selectedTaskIds, onToggleRow, editingCell, onEditCell, onUpdateTask, columns, isScrolled, displayDensity, showGridLines, onShowDetails }) => {
+const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap, selectedTaskIds, onToggleRow, editingCell, onEditCell, onUpdateTask, columns, isScrolled, displayDensity, showGridLines, onShowDetails, activeDetailedTaskId }) => {
   const isSelected = selectedTaskIds.has(task.id);
   const rowNum = rowNumberMap.get(task.id);
   const rowHeightClass = getRowHeight(displayDensity);
@@ -207,11 +207,12 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
           case 'progress':
               return task.progress ? <ProgressDisplay progress={task.progress} /> : null;
           case 'details':
+              const isDetailActive = activeDetailedTaskId === task.id;
               return (
                 <button 
-                    onClick={() => onShowDetails(task.id)} 
-                    className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                    aria-label={`View details for ${task.name}`}
+                    onClick={(e) => { e.stopPropagation(); onShowDetails(task.id); }} 
+                    className={`p-1 rounded-md transition-colors ${isDetailActive ? 'text-blue-600 bg-blue-50 ring-1 ring-blue-200' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
+                    aria-label={isDetailActive ? "Close details" : `View details for ${task.name}`}
                 >
                     <EyeIcon className="w-5 h-5" />
                 </button>
@@ -313,6 +314,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
             displayDensity={displayDensity}
             showGridLines={showGridLines}
             onShowDetails={onShowDetails}
+            activeDetailedTaskId={activeDetailedTaskId}
         />
       ))}
     </Fragment>

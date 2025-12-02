@@ -40,6 +40,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
     setEditingCell,
     handleUpdateTask,
     setDetailedTaskId,
+    detailedTaskId,
     handleSort,
     setColumns,
   } = useProject();
@@ -199,6 +200,10 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
                return newCols;
           });
       }
+  };
+
+  const handleShowDetails = (taskId: number) => {
+    setDetailedTaskId(prev => prev === taskId ? null : taskId);
   };
 
   const visibleColumns = columns.filter(c => c.visible);
@@ -396,7 +401,8 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
                         isScrolled={isScrolled}
                         displayDensity={displayDensity}
                         showGridLines={showGridLines}
-                        onShowDetails={setDetailedTaskId}
+                        onShowDetails={handleShowDetails}
+                        activeDetailedTaskId={detailedTaskId}
                     />
                     ))}
                 </tbody>

@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useMemo, useCallback, useContext, SetStateAction, ReactNode } from 'react';
+import React, { createContext, useState, useMemo, useCallback, useContext, SetStateAction, ReactNode, useEffect } from 'react';
 import { MOCK_TASKS } from '../data';
 import { Task, View, FilterRule, Priority, ColumnId, Status, DisplayDensity, Column } from '../types';
 import { DEFAULT_COLUMNS } from '../constants';
@@ -174,6 +174,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
     return findTask(tasks);
   }, [tasks, detailedTaskId]);
+
+  // Close details panel when view changes
+  useEffect(() => {
+    setDetailedTaskId(null);
+  }, [activeViewId, activeViewMode]);
 
   const value: ProjectContextType = {
     tasks, setTasks,
