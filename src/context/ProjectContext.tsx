@@ -1,36 +1,62 @@
 
-import React, { createContext, useState, useMemo, useCallback, useContext, SetStateAction, ReactNode, useEffect } from 'react';
-import { MOCK_TASKS } from '../data';
-import { Task, View, FilterRule, Priority, ColumnId, Status, DisplayDensity, Column } from '../types';
-import { DEFAULT_COLUMNS } from '../constants';
+
+import React, { createContext, useState, useMemo, useCallback, useContext, SetStateAction, ReactNode } from 'react';
+import { MOCK_TASKS, MOCK_BUDGET_DATA } from '../data';
+import { Task, View, FilterRule, Priority, ColumnId, Status, DisplayDensity, Column, ViewMode } from '../types';
+import { DEFAULT_COLUMNS, SPREADSHEET_DEFAULT_COLUMNS } from '../constants';
 
 type SortConfig = {
   columnId: ColumnId;
   direction: 'asc' | 'desc';
 } | null;
 
-const initialView: View = {
-  id: 'default',
-  name: 'Default View',
-  filters: [],
-  sort: null,
-  columns: DEFAULT_COLUMNS,
-  displayDensity: 'comfortable',
-  showGridLines: false,
-  fontSize: 12,
+const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => {
+  const baseConfig = {
+    filters: [],
+    sort: null,
+    displayDensity: 'comfortable' as DisplayDensity,
+    showGridLines: false,
+    fontSize: 12,
+  };
+
+  switch (viewMode) {
+    case 'spreadsheet':
+      return {
+        ...baseConfig,
+        type: 'spreadsheet',
+        columns: [],
+        spreadsheetData: MOCK_BUDGET_DATA,
+        spreadsheetColumns: SPREADSHEET_DEFAULT_COLUMNS,
+      };
+    case 'lookahead':
+       return { ...baseConfig, type: 'lookahead', columns: DEFAULT_COLUMNS };
+    case 'board':
+    case 'gantt':
+      return { ...baseConfig, type: viewMode, columns: [] };
+    case 'table':
+    default:
+      return {
+        ...baseConfig,
+        type: 'table',
+        columns: DEFAULT_COLUMNS,
+        spreadsheetData: [],
+        spreadsheetColumns: [],
+      };
+  }
 };
+
 
 interface ProjectContextType {
   tasks: Task[];
   setTasks: React.Dispatch<SetStateAction<Task[]>>;
   views: View[];
   setViews: React.Dispatch<SetStateAction<View[]>>;
-  activeViewId: string;
-  setActiveViewId: React.Dispatch<SetStateAction<string>>;
+  activeViewId: string | null;
+  handleSelectView: (viewId: string) => void;
   defaultViewId: string;
   setDefaultViewId: React.Dispatch<SetStateAction<string>>;
-  activeViewMode: 'table' | 'board' | 'gantt' | 'lookahead' | 'spreadsheet';
-  setActiveViewMode: React.Dispatch<SetStateAction<'table' | 'board' | 'gantt' | 'lookahead' | 'spreadsheet'>>;
+  activeViewMode: ViewMode;
+  handleViewModeChange: (mode: ViewMode) => void;
   selectedTaskIds: Set<number>;
   setSelectedTaskIds: React.Dispatch<SetStateAction<Set<number>>>;
   editingCell: { taskId: number; column: string } | null;
@@ -46,7 +72,7 @@ interface ProjectContextType {
   showFieldsMenu: boolean;
   setShowFieldsMenu: React.Dispatch<SetStateAction<boolean>>;
   activeView: View;
-  updateView: (updatedView: Partial<View>) => void;
+  updateView: (updatedView: Partial<Omit<View, 'id' | 'name'>>) => void;
   setFilters: (filters: FilterRule[]) => void;
   setSort: (sort: SortConfig) => void;
   setColumns: (updater: SetStateAction<Column[]>) => void;
@@ -66,10 +92,11 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
-  const [views, setViews] = useState<View[]>([initialView]);
-  const [activeViewId, setActiveViewId] = useState<string>('default');
-  const [defaultViewId, setDefaultViewId] = useState<string>('default');
-  const [activeViewMode, setActiveViewMode] = useState<'table' | 'board' | 'gantt' | 'lookahead' | 'spreadsheet'>('table');
+  const [views, setViews] = useState<View[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [defaultViewId, setDefaultViewId] = useState<string>('');
+  const [activeViewMode, setActiveViewMode] = useState<ViewMode>('table');
+  const [transientView, setTransientView] = useState<View | null>(null);
   
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
   const [editingCell, setEditingCell] = useState<{ taskId: number; column: string } | null>(null);
@@ -80,11 +107,38 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showFieldsMenu, setShowFieldsMenu] = useState(false);
   
-  const activeView = useMemo(() => views.find(v => v.id === activeViewId) || initialView, [views, activeViewId]);
+  const activeView = useMemo<View>(() => {
+    if (activeViewId === null) {
+      if (transientView && transientView.type === activeViewMode) {
+        return transientView;
+      }
+      return { id: 'transient', name: 'Default View', ...getDefaultViewConfig(activeViewMode) };
+    }
+    const foundView = views.find(v => v.id === activeViewId);
+    if (!foundView) {
+        // Fallback if ID is stale
+        return { id: 'transient', name: 'Default View', ...getDefaultViewConfig(activeViewMode) };
+    }
+    return foundView;
+  }, [views, activeViewId, activeViewMode, transientView]);
 
-  const updateView = useCallback((updatedView: Partial<View>) => {
-    setViews(prev => prev.map(v => v.id === activeViewId ? { ...v, ...updatedView } : v));
-  }, [activeViewId]);
+  const handleSelectView = (viewId: string) => {
+    const selectedView = views.find(v => v.id === viewId);
+    if (selectedView) {
+      setActiveViewId(selectedView.id);
+      setActiveViewMode(selectedView.type);
+      setTransientView(null);
+    }
+    setDetailedTaskId(null);
+  };
+
+  const updateView = useCallback((updatedProps: Partial<Omit<View, 'id' | 'name'>>) => {
+    if (activeViewId === null) {
+      setTransientView(prev => ({ ...(prev ?? activeView), ...updatedProps }));
+    } else {
+      setViews(prev => prev.map(v => v.id === activeViewId ? { ...v, ...updatedProps } : v));
+    }
+  }, [activeViewId, activeView]);
 
   const setFilters = (filters: FilterRule[]) => updateView({ filters });
   const setSort = (sort: SortConfig) => updateView({ sort });
@@ -105,6 +159,20 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         direction: activeView.sort?.columnId === columnId && activeView.sort.direction === 'asc' ? 'desc' : 'asc',
     };
     setSort(newSort);
+  };
+  
+  const handleViewModeChange = (mode: ViewMode) => {
+      const firstViewForMode = views.find(v => v.type === mode);
+      setActiveViewMode(mode);
+
+      if (firstViewForMode) {
+          setActiveViewId(firstViewForMode.id);
+          setTransientView(null);
+      } else {
+          setActiveViewId(null);
+          setTransientView({ id: 'transient', name: `Default ${mode}`, ...getDefaultViewConfig(mode) });
+      }
+      setDetailedTaskId(null);
   };
 
   const handleUpdateTask = useCallback((taskId: number, updatedValues: Partial<Omit<Task, 'id' | 'children'>>) => {
@@ -144,19 +212,44 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const handleSaveView = (name: string) => {
     if (modalState?.type === 'rename' && modalState.view) {
         setViews(views.map(v => v.id === modalState.view!.id ? { ...v, name } : v));
-    } else {
-        const newView: View = { ...activeView, id: `view_${Date.now()}`, name };
-        setViews([...views, newView]);
+    } else { // 'create'
+        const newView: View = {
+             ...activeView,
+             id: `view_${Date.now()}`,
+             name,
+        };
+        const newViews = [...views, newView];
+        setViews(newViews);
         setActiveViewId(newView.id);
+        setTransientView(null);
+
+        if (newViews.length === 1) {
+            setDefaultViewId(newView.id);
+        }
     }
     setModalState(null);
   };
   
   const handleDeleteView = (id: string) => {
+    const viewToDelete = views.find(v => v.id === id);
+    if (!viewToDelete) return;
+
     const newViews = views.filter(v => v.id !== id);
     setViews(newViews);
+
+    if (defaultViewId === id) {
+        setDefaultViewId(newViews.length > 0 ? newViews[0].id : '');
+    }
+
     if (activeViewId === id) {
-        setActiveViewId(defaultViewId || newViews[0].id);
+        const nextViewInMode = newViews.find(v => v.type === viewToDelete.type);
+        if (nextViewInMode) {
+            setActiveViewId(nextViewInMode.id);
+        } else {
+            setActiveViewId(null);
+            setActiveViewMode(viewToDelete.type);
+            setTransientView({ id: 'transient', name: `Default ${viewToDelete.type}`, ...getDefaultViewConfig(viewToDelete.type) });
+        }
     }
   };
 
@@ -175,17 +268,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     return findTask(tasks);
   }, [tasks, detailedTaskId]);
 
-  // Close details panel when view changes
-  useEffect(() => {
-    setDetailedTaskId(null);
-  }, [activeViewId, activeViewMode]);
-
   const value: ProjectContextType = {
     tasks, setTasks,
     views, setViews,
-    activeViewId, setActiveViewId,
+    activeViewId,
+    handleSelectView,
     defaultViewId, setDefaultViewId,
-    activeViewMode, setActiveViewMode,
+    activeViewMode, handleViewModeChange,
     selectedTaskIds, setSelectedTaskIds,
     editingCell, setEditingCell,
     detailedTaskId, setDetailedTaskId,

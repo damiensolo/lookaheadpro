@@ -1,4 +1,5 @@
 
+
 export enum Status {
   New = 'New',
   Planned = 'Planned',
@@ -119,9 +120,12 @@ export interface SpreadsheetColumn {
     isTotal?: boolean;
 }
 
+export type ViewMode = 'table' | 'spreadsheet' | 'board' | 'gantt' | 'lookahead';
+
 export interface View {
   id: string;
   name: string;
+  type: ViewMode;
   filters: FilterRule[];
   sort: { columnId: ColumnId; direction: 'asc' | 'desc' } | null;
   columns: Column[];

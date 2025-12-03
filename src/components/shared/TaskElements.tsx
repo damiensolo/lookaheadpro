@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useState, useCallback, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Assignee, Status, Priority, Impact, Progress } from '../../types';
@@ -291,7 +292,7 @@ export const PrioritySelector: React.FC<{
 
 
 export const AssigneeAvatar: React.FC<{ assignee: Assignee, className?: string }> = ({ assignee, className }) => (
-    <div title={assignee.name} className={`rounded-full ${assignee.avatarColor} flex items-center justify-center text-white font-bold ring-2 ring-white ${className || 'w-5 h-5 text-xs'}`}>
+    <div title={assignee.name} className={`rounded-full ${assignee.avatarColor} flex items-center justify-center text-white font-bold ${className || 'w-5 h-5 text-xs'}`}>
         {assignee.initials}
     </div>
 );

@@ -1,4 +1,6 @@
-import { Column, Status, Priority, ColumnId, FilterOperator } from '../types';
+
+
+import { Column, Status, Priority, ColumnId, FilterOperator, SpreadsheetColumn } from '../types';
 
 export const DEFAULT_COLUMNS: Column[] = [
   { id: 'details', label: '', width: '60px', visible: true, minWidth: 60 },
@@ -41,3 +43,21 @@ export const getEnumOptions = (columnId: ColumnId): { id: string, label: string 
             return [];
     }
 };
+
+export const SPREADSHEET_DEFAULT_COLUMNS: SpreadsheetColumn[] = [
+    { id: 'costCode', label: 'Cost Code', width: 120 },
+    { id: 'name', label: 'Name', width: 250 },
+    { id: 'divisionCode', label: 'Division Code', width: 130 },
+    { id: 'divisionName', label: 'Division Name', width: 200 },
+    { id: 'type', label: 'Type', width: 130 },
+    { id: 'quantity', label: 'Quantity', width: 100, align: 'right' },
+    { id: 'unit', label: 'Quantity Unit', width: 110 },
+    { id: 'effortHours', label: 'Effort hours', width: 110, align: 'right', isTotal: true },
+    { id: 'calcType', label: 'Type of Calculation', width: 160 },
+    { id: 'totalBudget', label: 'Total Budget Amount', width: 160, align: 'right', isTotal: true },
+    { id: 'labor', label: 'Labor', width: 130, align: 'right', isTotal: true },
+    { id: 'equipment', label: 'Equipment', width: 130, align: 'right', isTotal: true },
+    { id: 'subcontractor', label: 'Subcontractor', width: 130, align: 'right', isTotal: true },
+    { id: 'material', label: 'Material', width: 130, align: 'right', isTotal: true },
+    { id: 'others', label: 'Others', width: 130, align: 'right', isTotal: true },
+];

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Task, Priority } from '../../../../types';
 import { AssigneeAvatar, ImpactPill, PrioritySelector } from '../../../shared/TaskElements';
@@ -38,9 +37,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onPriorityChange }) => {
              </div>
             <div className="flex items-center -space-x-2">
                 {task.assignees.map(a => (
-                     <div key={a.id} className="ring-2 ring-white rounded-full bg-white">
-                        <AssigneeAvatar assignee={a} className="w-7 h-7 text-xs" />
-                     </div>
+                    <AssigneeAvatar key={a.id} assignee={a} className="w-7 h-7 text-xs ring-2 ring-white" />
                 ))}
             </div>
         </div>

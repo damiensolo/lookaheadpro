@@ -1,12 +1,13 @@
+
+
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { BudgetLineItemStyle, SpreadsheetColumn } from '../../../types';
-import { MOCK_BUDGET_DATA } from '../../../data';
 import { useProject } from '../../../context/ProjectContext';
 import SpreadsheetToolbar from './components/SpreadsheetToolbar';
 import SpreadsheetHeader from './components/SpreadsheetHeader';
 import SpreadsheetRow from './components/SpreadsheetRow';
 import { ContextMenu, ContextMenuItem } from '../../common/ui/ContextMenu';
-import { ScissorsIcon, CopyIcon, ClipboardIcon, TrashIcon, PlusIcon, ArrowUpIcon, ArrowDownIcon, ChevronLeftIcon, ChevronRightIcon, FillColorIcon, BorderColorIcon } from '../../common/Icons';
+import { ScissorsIcon, CopyIcon, ClipboardIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, ChevronLeftIcon, ChevronRightIcon, FillColorIcon, BorderColorIcon } from '../../common/Icons';
 import { BACKGROUND_COLORS, TEXT_BORDER_COLORS } from '../../../constants/designTokens';
 
 // --- Constants ---
@@ -16,40 +17,11 @@ const formatCurrency = (amount: number | null) => {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const DEFAULT_COLUMNS: SpreadsheetColumn[] = [
-    { id: 'costCode', label: 'Cost Code', width: 120 },
-    { id: 'name', label: 'Name', width: 250 },
-    { id: 'divisionCode', label: 'Division Code', width: 130 },
-    { id: 'divisionName', label: 'Division Name', width: 200 },
-    { id: 'type', label: 'Type', width: 130 },
-    { id: 'quantity', label: 'Quantity', width: 100, align: 'right' },
-    { id: 'unit', label: 'Quantity Unit', width: 110 },
-    { id: 'effortHours', label: 'Effort hours', width: 110, align: 'right', isTotal: true },
-    { id: 'calcType', label: 'Type of Calculation', width: 160 },
-    { id: 'totalBudget', label: 'Total Budget Amount', width: 160, align: 'right', isTotal: true },
-    { id: 'labor', label: 'Labor', width: 130, align: 'right', isTotal: true },
-    { id: 'equipment', label: 'Equipment', width: 130, align: 'right', isTotal: true },
-    { id: 'subcontractor', label: 'Subcontractor', width: 130, align: 'right', isTotal: true },
-    { id: 'material', label: 'Material', width: 130, align: 'right', isTotal: true },
-    { id: 'others', label: 'Others', width: 130, align: 'right', isTotal: true },
-];
-
 const SpreadsheetView: React.FC = () => {
   const { activeView, updateView } = useProject();
   
-  // Initialize state from view persistence or defaults
-  const budgetData = useMemo(() => activeView.spreadsheetData || MOCK_BUDGET_DATA, [activeView.spreadsheetData]);
-  const columns = useMemo(() => activeView.spreadsheetColumns || DEFAULT_COLUMNS, [activeView.spreadsheetColumns]);
-
-  // Persist defaults if missing (on mount)
-  useEffect(() => {
-      if (!activeView.spreadsheetData || !activeView.spreadsheetColumns) {
-          updateView({
-              spreadsheetData: activeView.spreadsheetData || MOCK_BUDGET_DATA,
-              spreadsheetColumns: activeView.spreadsheetColumns || DEFAULT_COLUMNS
-          });
-      }
-  }, [activeView.spreadsheetData, activeView.spreadsheetColumns, updateView]);
+  const budgetData = useMemo(() => activeView.spreadsheetData || [], [activeView.spreadsheetData]);
+  const columns = useMemo(() => activeView.spreadsheetColumns || [], [activeView.spreadsheetColumns]);
 
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [focusedCell, setFocusedCell] = useState<{ rowId: string; colId: string } | null>(null);
@@ -68,7 +40,7 @@ const SpreadsheetView: React.FC = () => {
       secondaryId?: string; // For cell context (columnId)
   } | null>(null);
 
-  const isAllSelected = selectedRowIds.size === budgetData.length;
+  const isAllSelected = budgetData.length > 0 && selectedRowIds.size === budgetData.length;
   const isSomeSelected = selectedRowIds.size > 0 && selectedRowIds.size < budgetData.length;
 
   useEffect(() => {
