@@ -5,6 +5,7 @@ import { View, ViewMode } from '../../types';
 import { useProject } from '../../context/ProjectContext';
 import FilterMenu from './FilterMenu';
 import { PlusIcon, MoreHorizontalIcon, TableIcon, BoardIcon, GanttIcon, LookaheadIcon, SearchIcon, FilterIcon, SpreadsheetIcon } from '../common/Icons';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../common/ui/Tooltip';
 
 const modes: { id: ViewMode; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
   { id: 'table', label: 'Table', icon: TableIcon },
@@ -213,30 +214,43 @@ const ViewControls: React.FC = () => {
                     );
                 })}
             </nav>
-            <button onClick={() => setModalState({ type: 'create' })} className="ml-1 p-1.5 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800">
-                <PlusIcon className="w-4 h-4" />
-            </button>
+            
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger>
+                        <button onClick={() => setModalState({ type: 'create' })} className="ml-1 p-1.5 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800">
+                            <PlusIcon className="w-4 h-4" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Create New View</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
 
             <div className="h-6 w-px bg-gray-300 mx-2"></div>
 
             <div className="flex items-center">
-                {modes.map(({ id, label, icon: Icon }) => {
-                const isActive = activeViewMode === id;
-                return (
-                    <button
-                    key={id}
-                    title={label}
-                    onClick={() => handleViewModeChange(id)}
-                    className={`p-2 text-sm font-medium rounded-md transition-colors ${
-                        isActive ? 'bg-white shadow-sm border border-gray-200 text-gray-800' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'
-                    }`}
-                    aria-label={`Switch to ${label} view`}
-                    aria-pressed={isActive}
-                    >
-                    <Icon className="w-5 h-5" />
-                    </button>
-                );
-                })}
+                <TooltipProvider>
+                    {modes.map(({ id, label, icon: Icon }) => {
+                    const isActive = activeViewMode === id;
+                    return (
+                        <Tooltip key={id}>
+                            <TooltipTrigger>
+                                <button
+                                    onClick={() => handleViewModeChange(id)}
+                                    className={`p-2 text-sm font-medium rounded-md transition-colors ${
+                                        isActive ? 'bg-white shadow-sm border border-gray-200 text-gray-800' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+                                    }`}
+                                    aria-label={`Switch to ${label} view`}
+                                    aria-pressed={isActive}
+                                >
+                                <Icon className="w-5 h-5" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{label}</TooltipContent>
+                        </Tooltip>
+                    );
+                    })}
+                </TooltipProvider>
             </div>
         </div>
     </div>

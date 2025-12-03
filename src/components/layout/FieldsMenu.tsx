@@ -12,19 +12,49 @@ interface SettingsMenuProps {
   disableClickOutside?: boolean;
 }
 
-const DensityOption: React.FC<{
+const CompactIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+    <rect x="2" y="3" width="16" height="2" rx="1" opacity="0.8" />
+    <rect x="2" y="7" width="16" height="2" rx="1" opacity="0.8" />
+    <rect x="2" y="11" width="16" height="2" rx="1" opacity="0.8" />
+    <rect x="2" y="15" width="16" height="2" rx="1" opacity="0.8" />
+  </svg>
+);
+
+const StandardIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+    <rect x="2" y="4" width="16" height="2" rx="1" opacity="0.8" />
+    <rect x="2" y="9" width="16" height="2" rx="1" opacity="0.8" />
+    <rect x="2" y="14" width="16" height="2" rx="1" opacity="0.8" />
+  </svg>
+);
+
+const ComfortableIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+    <rect x="2" y="5" width="16" height="2" rx="1" opacity="0.8" />
+    <rect x="2" y="13" width="16" height="2" rx="1" opacity="0.8" />
+  </svg>
+);
+
+const DensityButton: React.FC<{
   label: string;
   density: DisplayDensity;
   current: DisplayDensity;
   onClick: (d: DisplayDensity) => void;
-}> = ({ label, density, current, onClick }) => (
+  icon: React.ReactNode;
+}> = ({ label, density, current, onClick, icon }) => (
   <button
     onClick={() => onClick(density)}
-    className={`w-full text-left px-3 py-1.5 text-sm rounded-md ${
-      current === density ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'
-    }`}
+    title={label}
+    className={cn(
+      "flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-md border transition-all h-14",
+      current === density
+        ? "bg-blue-50 border-blue-200 text-blue-600 shadow-sm"
+        : "bg-white border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+    )}
   >
-    {label}
+    {icon}
+    <span className="text-[10px] mt-1 font-medium">{label}</span>
   </button>
 );
 
@@ -102,10 +132,10 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableCl
       {/* Density Section */}
       <div className="p-3 border-b border-gray-200">
         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Display Density</h4>
-        <div className="space-y-1">
-          <DensityOption label="Compact" density="compact" current={displayDensity} onClick={setDisplayDensity} />
-          <DensityOption label="Standard" density="standard" current={displayDensity} onClick={setDisplayDensity} />
-          <DensityOption label="Comfortable" density="comfortable" current={displayDensity} onClick={setDisplayDensity} />
+        <div className="flex gap-2">
+          <DensityButton label="Compact" density="compact" current={displayDensity} onClick={setDisplayDensity} icon={<CompactIcon />} />
+          <DensityButton label="Standard" density="standard" current={displayDensity} onClick={setDisplayDensity} icon={<StandardIcon />} />
+          <DensityButton label="Comfortable" density="comfortable" current={displayDensity} onClick={setDisplayDensity} icon={<ComfortableIcon />} />
         </div>
       </div>
 
