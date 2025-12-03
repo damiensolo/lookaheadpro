@@ -24,6 +24,7 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
       return {
         ...baseConfig,
         type: 'spreadsheet',
+        displayDensity: 'compact',
         columns: [],
         spreadsheetData: MOCK_BUDGET_DATA,
         spreadsheetColumns: SPREADSHEET_DEFAULT_COLUMNS,

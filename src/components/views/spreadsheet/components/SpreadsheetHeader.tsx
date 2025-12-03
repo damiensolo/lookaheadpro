@@ -1,5 +1,7 @@
+
+
 import React from 'react';
-import { SpreadsheetColumn } from '../../../../types';
+import { SpreadsheetColumn, DisplayDensity } from '../../../../types';
 import { Resizer } from '../../../common/ui/Resizer';
 
 interface SpreadsheetHeaderProps {
@@ -8,9 +10,19 @@ interface SpreadsheetHeaderProps {
     resizingColumnId: string | null;
     isScrolled: boolean;
     fontSize: number;
+    displayDensity: DisplayDensity;
     onMouseDown: (columnId: string) => (e: React.MouseEvent) => void;
     onContextMenu: (e: React.MouseEvent, columnId: string) => void;
 }
+
+const getHeaderHeightClass = (density: DisplayDensity) => {
+  switch (density) {
+    case 'compact': return 'h-8';
+    case 'standard': return 'h-10';
+    case 'comfortable': return 'h-12';
+    default: return 'h-8';
+  }
+};
 
 const SpreadsheetHeader: React.FC<SpreadsheetHeaderProps> = ({
     columns,
@@ -18,12 +30,15 @@ const SpreadsheetHeader: React.FC<SpreadsheetHeaderProps> = ({
     resizingColumnId,
     isScrolled,
     fontSize,
+    displayDensity,
     onMouseDown,
     onContextMenu
 }) => {
+    const heightClass = getHeaderHeightClass(displayDensity);
+
     return (
         <thead className="bg-gray-50 text-gray-700 font-semibold sticky top-0 z-30">
-            <tr className="h-8">
+            <tr className={heightClass}>
                 {/* Sticky Row Number Header */}
                 <th className={`sticky left-0 z-40 w-14 border-b border-r border-gray-200 px-1 text-center transition-shadow ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''} bg-gray-50`}>
                     <div className="flex items-center justify-center h-full w-full text-gray-500 font-semibold" style={{ fontSize }}>

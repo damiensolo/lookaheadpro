@@ -60,12 +60,14 @@ const DensityButton: React.FC<{
 
 
 const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableClickOutside }) => {
-  const { activeView, setColumns, setDisplayDensity, setShowGridLines, setFontSize } = useProject();
+  const { activeView, setColumns, setDisplayDensity, setShowGridLines, setFontSize, activeViewMode } = useProject();
   const { columns, displayDensity, showGridLines, fontSize } = activeView;
   const menuRef = useRef<HTMLDivElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
   
+  const isSpreadsheet = activeViewMode === 'spreadsheet';
+
   useEffect(() => {
     if (disableClickOutside) return;
 
@@ -135,7 +137,9 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableCl
         <div className="flex gap-2">
           <DensityButton label="Compact" density="compact" current={displayDensity} onClick={setDisplayDensity} icon={<CompactIcon />} />
           <DensityButton label="Standard" density="standard" current={displayDensity} onClick={setDisplayDensity} icon={<StandardIcon />} />
-          <DensityButton label="Comfortable" density="comfortable" current={displayDensity} onClick={setDisplayDensity} icon={<ComfortableIcon />} />
+          {!isSpreadsheet && (
+            <DensityButton label="Comfortable" density="comfortable" current={displayDensity} onClick={setDisplayDensity} icon={<ComfortableIcon />} />
+          )}
         </div>
       </div>
 
@@ -163,66 +167,73 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableCl
         </div>
       </div>
       
-      {/* Grid Lines Section */}
-      <div className="p-3 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-700">Show grid lines</h4>
-              <label htmlFor="grid-toggle" className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                      type="checkbox" 
-                      id="grid-toggle" 
-                      className="sr-only peer" 
-                      checked={showGridLines} 
-                      onChange={(e) => setShowGridLines(e.target.checked)} 
-                  />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-          </div>
-      </div>
+      {/* Grid Lines Section - Hidden for Spreadsheet */}
+      {!isSpreadsheet && (
+        <div className="p-3 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-700">Show grid lines</h4>
+                <label htmlFor="grid-toggle" className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                        type="checkbox" 
+                        id="grid-toggle" 
+                        className="sr-only peer" 
+                        checked={showGridLines} 
+                        onChange={(e) => setShowGridLines(e.target.checked)} 
+                    />
+                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+        </div>
+      )}
               
-      <div className="p-3">
-        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Fields</h4>
-        <p className="text-xs text-gray-500 mb-2">Toggle visibility and reorder.</p>
-      </div>
-      <ul className="px-1 pb-2 flex-grow overflow-y-auto" style={{ maxHeight: '250px' }} onDragLeave={handleDragLeave}>
-        {columns.map((column, index) => (
-          <React.Fragment key={column.id}>
-             {dropIndicatorIndex === index && (
+      {/* Fields Section - Hidden for Spreadsheet as it uses different columns */}
+      {!isSpreadsheet && (
+        <>
+          <div className="p-3">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Fields</h4>
+            <p className="text-xs text-gray-500 mb-2">Toggle visibility and reorder.</p>
+          </div>
+          <ul className="px-1 pb-2 flex-grow overflow-y-auto" style={{ maxHeight: '250px' }} onDragLeave={handleDragLeave}>
+            {columns.map((column, index) => (
+              <React.Fragment key={column.id}>
+                {dropIndicatorIndex === index && (
+                    <li className="h-0.5 bg-blue-500 mx-2 my-0.5"></li>
+                  )}
+                <li
+                  className={`flex items-center justify-between px-2 py-1.5 hover:bg-gray-50 rounded-md ${draggedIndex === index ? 'opacity-50' : ''}`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={handleDrop}
+                >
+                  <div className="flex items-center">
+                    <GripVerticalIcon className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-grab mr-1" />
+                    <label htmlFor={`field-${column.id}`} className="text-sm text-gray-700 cursor-pointer">{column.label}</label>
+                  </div>
+                  <input
+                    type="checkbox"
+                    id={`field-${column.id}`}
+                    checked={column.visible}
+                    onChange={() => handleVisibilityChange(column.id)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </li>
+              </React.Fragment>
+            ))}
+            {dropIndicatorIndex === columns.length && (
                 <li className="h-0.5 bg-blue-500 mx-2 my-0.5"></li>
-              )}
-            <li
-              className={`flex items-center justify-between px-2 py-1.5 hover:bg-gray-50 rounded-md ${draggedIndex === index ? 'opacity-50' : ''}`}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDrop={handleDrop}
+            )}
+          </ul>
+          <div className="p-2 border-t border-gray-200 mt-auto">
+            <button 
+              onClick={onResetColumns}
+              className="w-full text-center text-sm font-medium text-gray-700 hover:text-blue-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
             >
-              <div className="flex items-center">
-                <GripVerticalIcon className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-grab mr-1" />
-                <label htmlFor={`field-${column.id}`} className="text-sm text-gray-700 cursor-pointer">{column.label}</label>
-              </div>
-              <input
-                type="checkbox"
-                id={`field-${column.id}`}
-                checked={column.visible}
-                onChange={() => handleVisibilityChange(column.id)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-            </li>
-          </React.Fragment>
-        ))}
-        {dropIndicatorIndex === columns.length && (
-            <li className="h-0.5 bg-blue-500 mx-2 my-0.5"></li>
-        )}
-      </ul>
-      <div className="p-2 border-t border-gray-200 mt-auto">
-        <button 
-          onClick={onResetColumns}
-          className="w-full text-center text-sm font-medium text-gray-700 hover:text-blue-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-        >
-          Reset fields to default
-        </button>
-      </div>
+              Reset fields to default
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

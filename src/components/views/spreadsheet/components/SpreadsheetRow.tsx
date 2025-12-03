@@ -1,5 +1,7 @@
+
+
 import React from 'react';
-import { BudgetLineItem, SpreadsheetColumn } from '../../../../types';
+import { BudgetLineItem, SpreadsheetColumn, DisplayDensity } from '../../../../types';
 import { AlertTriangleIcon } from '../../../common/Icons';
 
 const formatCurrency = (amount: number | null) => {
@@ -14,10 +16,20 @@ interface SpreadsheetRowProps {
     focusedCell: { rowId: string; colId: string } | null;
     isScrolled: boolean;
     fontSize: number;
+    displayDensity: DisplayDensity;
     onRowHeaderClick: (id: string, multiSelect: boolean) => void;
     onCellClick: (rowId: string, colId: string) => void;
     onContextMenu: (e: React.MouseEvent, type: 'row' | 'cell', targetId: string, secondaryId?: string) => void;
 }
+
+const getRowHeightClass = (density: DisplayDensity) => {
+  switch (density) {
+    case 'compact': return 'h-7';
+    case 'standard': return 'h-9';
+    case 'comfortable': return 'h-11';
+    default: return 'h-7';
+  }
+};
 
 const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
     row,
@@ -26,6 +38,7 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
     focusedCell,
     isScrolled,
     fontSize,
+    displayDensity,
     onRowHeaderClick,
     onCellClick,
     onContextMenu
@@ -33,12 +46,13 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
     const isRowFocused = focusedCell?.rowId === row.id;
     const customStyle = row.style || {};
     const customBorder = customStyle.borderColor;
+    const rowHeightClass = getRowHeightClass(displayDensity);
 
     const rowStyle: React.CSSProperties = {};
     if (customStyle.backgroundColor) rowStyle.backgroundColor = customStyle.backgroundColor;
     if (customStyle.textColor) rowStyle.color = customStyle.textColor;
 
-    let rowClasses = 'h-7 group bg-white';
+    let rowClasses = `${rowHeightClass} group bg-white`;
     if (!customStyle.backgroundColor) {
         rowClasses += isSelected ? ' bg-blue-50' : ' hover:bg-gray-50';
     }
@@ -49,18 +63,13 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
             <td 
                 onClick={(e) => onRowHeaderClick(row.id, e.metaKey || e.ctrlKey)}
                 onContextMenu={(e) => onContextMenu(e, 'row', row.id)}
-                className={`sticky left-0 z-40 border-r border-gray-200 text-center cursor-pointer transition-shadow duration-200 p-0 relative
+                className={`sticky left-0 z-20 border-r border-gray-200 text-center cursor-pointer transition-colors p-0 relative bg-white
                     ${!customBorder ? 'border-b' : ''}
-                    ${
-                        isSelected
-                        ? 'bg-blue-600 text-white'
-                        : isRowFocused
-                        ? 'bg-blue-100 text-blue-800 font-semibold'
-                        : 'bg-white text-gray-500 group-hover:bg-gray-50'
-                    }
-                    ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}
+                    ${isSelected ? 'bg-blue-600 text-white' : isRowFocused ? 'bg-blue-100 text-blue-800 font-semibold' : 'text-gray-500 group-hover:bg-gray-50'}
+                    ${isScrolled ? 'shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]' : ''}
                 `}
                 style={{
+                    backgroundColor: isSelected ? undefined : isRowFocused ? undefined : customStyle.backgroundColor,
                     color: isSelected ? undefined : isRowFocused ? undefined : customStyle.textColor,
                 }}
             >

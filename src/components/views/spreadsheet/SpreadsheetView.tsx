@@ -18,10 +18,27 @@ const formatCurrency = (amount: number | null) => {
 };
 
 const SpreadsheetView: React.FC = () => {
-  const { activeView, updateView } = useProject();
+  const { activeView, updateView, searchTerm } = useProject();
   
-  const budgetData = useMemo(() => activeView.spreadsheetData || [], [activeView.spreadsheetData]);
+  const rawBudgetData = useMemo(() => activeView.spreadsheetData || [], [activeView.spreadsheetData]);
+  
+  // Implement search filtering
+  const budgetData = useMemo(() => {
+      if (!searchTerm.trim()) return rawBudgetData;
+      const lowerTerm = searchTerm.toLowerCase();
+      
+      return rawBudgetData.filter(item => {
+          // Search across all values in the row
+          return Object.values(item).some(val => 
+              val !== null && 
+              val !== undefined && 
+              String(val).toLowerCase().includes(lowerTerm)
+          );
+      });
+  }, [rawBudgetData, searchTerm]);
+
   const columns = useMemo(() => activeView.spreadsheetColumns || [], [activeView.spreadsheetColumns]);
+  const displayDensity = activeView.displayDensity;
 
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [focusedCell, setFocusedCell] = useState<{ rowId: string; colId: string } | null>(null);
@@ -40,8 +57,8 @@ const SpreadsheetView: React.FC = () => {
       secondaryId?: string; // For cell context (columnId)
   } | null>(null);
 
-  const isAllSelected = budgetData.length > 0 && selectedRowIds.size === budgetData.length;
-  const isSomeSelected = selectedRowIds.size > 0 && selectedRowIds.size < budgetData.length;
+  const isAllSelected = budgetData.length > 0 && budgetData.every(item => selectedRowIds.has(item.id));
+  const isSomeSelected = selectedRowIds.size > 0 && !isAllSelected;
 
   useEffect(() => {
     if (toolbarCheckboxRef.current) {
@@ -64,7 +81,9 @@ const SpreadsheetView: React.FC = () => {
     if (isAllSelected) {
         setSelectedRowIds(new Set());
     } else {
-        setSelectedRowIds(new Set(budgetData.map(item => item.id)));
+        const newSet = new Set(selectedRowIds);
+        budgetData.forEach(item => newSet.add(item.id));
+        setSelectedRowIds(newSet);
     }
   };
 
@@ -118,7 +137,8 @@ const SpreadsheetView: React.FC = () => {
 
   const handleBulkStyleUpdate = (newStyle: Partial<BudgetLineItemStyle>, targetIds?: Set<string>) => {
     const idsToUpdate = targetIds || selectedRowIds;
-    const updatedData = budgetData.map(item => {
+    // We update the original data source (rawBudgetData) to ensure persistence even when filter changes
+    const updatedData = rawBudgetData.map(item => {
         if (idsToUpdate.has(item.id)) {
             const currentStyle = item.style || {};
             const mergedStyle = { ...currentStyle, ...newStyle };
@@ -141,7 +161,7 @@ const SpreadsheetView: React.FC = () => {
   const handleDeleteRow = () => {
       if (contextMenu?.type === 'row' || contextMenu?.type === 'cell') {
           const idsToDelete = contextMenu.type === 'row' && selectedRowIds.size > 0 ? selectedRowIds : new Set([contextMenu.targetId]);
-          const newData = budgetData.filter(row => !idsToDelete.has(row.id));
+          const newData = rawBudgetData.filter(row => !idsToDelete.has(row.id));
           updateView({ spreadsheetData: newData });
           setSelectedRowIds(new Set());
       }
@@ -341,6 +361,7 @@ const SpreadsheetView: React.FC = () => {
                     resizingColumnId={resizingColumnId}
                     isScrolled={isScrolled}
                     fontSize={activeView.fontSize}
+                    displayDensity={displayDensity}
                     onMouseDown={onMouseDown}
                     onContextMenu={(e, colId) => handleContextMenu(e, 'column', colId)}
                 />
@@ -355,6 +376,7 @@ const SpreadsheetView: React.FC = () => {
                         focusedCell={focusedCell}
                         isScrolled={isScrolled}
                         fontSize={activeView.fontSize}
+                        displayDensity={displayDensity}
                         onRowHeaderClick={handleRowHeaderClick}
                         onCellClick={handleCellClick}
                         onContextMenu={handleContextMenu}

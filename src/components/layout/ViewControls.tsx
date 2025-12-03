@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { View, ViewMode } from '../../types';
@@ -145,6 +146,8 @@ const ViewControls: React.FC = () => {
     setDropIndex(null);
   };
 
+  const searchPlaceholder = activeViewMode === 'spreadsheet' ? 'Search...' : 'Search tasks...';
+
   return (
     <div className="flex items-center gap-3">
         {/* Search */}
@@ -152,7 +155,7 @@ const ViewControls: React.FC = () => {
             <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-opacity duration-200 ${isSearchFocused ? 'opacity-0' : 'opacity-100'}`} />
             <input 
                 type="text" 
-                placeholder="Search tasks..." 
+                placeholder={searchPlaceholder} 
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
