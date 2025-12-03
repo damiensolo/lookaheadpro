@@ -206,7 +206,7 @@ const ViewControls: React.FC = () => {
                             onRename={() => setModalState({ type: 'rename', view })}
                             onDelete={() => handleDeleteView(view.id)}
                             onSetDefault={() => setDefaultViewId(view.id)}
-                            canDelete={views.length > 1}
+                            canDelete={view.id !== activeViewId}
                             />
                         </div>
                         </div>
