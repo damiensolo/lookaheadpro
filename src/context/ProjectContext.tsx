@@ -11,6 +11,7 @@ type SortConfig = {
 } | null;
 
 const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => {
+  // Create fresh base config for every call
   const baseConfig = {
     filters: [],
     sort: null,
@@ -114,12 +115,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       if (transientView && transientView.type === activeViewMode) {
         return transientView;
       }
-      return { id: 'transient', name: 'Default View', ...getDefaultViewConfig(activeViewMode) };
+      // Generate a fresh unique ID for fallback to ensure uniqueness
+      return { id: `transient-${Date.now()}`, name: 'Default View', ...getDefaultViewConfig(activeViewMode) };
     }
     const foundView = views.find(v => v.id === activeViewId);
     if (!foundView) {
         // Fallback if ID is stale
-        return { id: 'transient', name: 'Default View', ...getDefaultViewConfig(activeViewMode) };
+        return { id: `transient-fallback-${Date.now()}`, name: 'Default View', ...getDefaultViewConfig(activeViewMode) };
     }
     return foundView;
   }, [views, activeViewId, activeViewMode, transientView]);
@@ -167,8 +169,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       // Always switch to a fresh default view for the selected mode
       setActiveViewMode(mode);
       setActiveViewId(null);
+      // Using a timestamp in the ID ensures this is treated as a completely new view instance,
+      // forcing all components (like TableView) to reset their state and not reuse any cached configuration.
       setTransientView({ 
-          id: 'transient', 
+          id: `transient-${Date.now()}`, 
           name: 'Default View', 
           ...getDefaultViewConfig(mode) 
       });
@@ -248,7 +252,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         } else {
             setActiveViewId(null);
             setActiveViewMode(viewToDelete.type);
-            setTransientView({ id: 'transient', name: `Default ${viewToDelete.type}`, ...getDefaultViewConfig(viewToDelete.type) });
+            setTransientView({ id: `transient-${Date.now()}`, name: `Default ${viewToDelete.type}`, ...getDefaultViewConfig(viewToDelete.type) });
         }
     }
   };
