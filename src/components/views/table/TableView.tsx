@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ColumnId, DisplayDensity, TaskStyle, Task } from '../../../types';
@@ -85,11 +86,15 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
   };
 
   const handleBulkStyleUpdate = (newStyle: Partial<TaskStyle>) => {
-    const newStyles = { ...(activeView.taskStyles || {}) };
+    // FIX: The spread operator on an object with a numeric index signature (`taskStyles`)
+    // results in an object with a string index signature. The type of `newStyles` is updated
+    // to match, and then cast back to a numeric index signature for compatibility with `updateView`.
+    const newStyles: { [key: string]: TaskStyle } = { ...(activeView.taskStyles || {}) };
     const selectedIds = Array.from(selectedTaskIds);
 
     for (const taskId of selectedIds) {
-        const currentStyle = newStyles[taskId] || {};
+        const key = `${taskId}`;
+        const currentStyle = newStyles[key] || {};
         const mergedStyle = { ...currentStyle, ...newStyle };
         
         // Clean up undefined values to allow "unsetting"
@@ -98,12 +103,12 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
         if (newStyle.textColor === undefined) delete mergedStyle.textColor;
 
         if (Object.keys(mergedStyle).length > 0) {
-            newStyles[taskId] = mergedStyle;
+            newStyles[key] = mergedStyle;
         } else {
-            delete newStyles[taskId]; // Clean up empty style objects
+            delete newStyles[key];
         }
     }
-    updateView({ taskStyles: newStyles });
+    updateView({ taskStyles: newStyles as unknown as { [key: number]: TaskStyle } });
   };
 
   const handleResize = useCallback((columnId: ColumnId, newWidth: number) => {
