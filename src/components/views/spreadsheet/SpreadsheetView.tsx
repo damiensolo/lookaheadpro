@@ -1,7 +1,7 @@
 
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { BudgetLineItemStyle, SpreadsheetColumn } from '../../../types';
+import { BudgetLineItem, BudgetLineItemStyle, SpreadsheetColumn } from '../../../types';
 import { useProject } from '../../../context/ProjectContext';
 import SpreadsheetToolbar from './components/SpreadsheetToolbar';
 import SpreadsheetHeader from './components/SpreadsheetHeader';
@@ -18,12 +18,12 @@ const formatCurrency = (amount: number | null) => {
 };
 
 const SpreadsheetView: React.FC = () => {
-  const { activeView, updateView, searchTerm } = useProject();
+  const { activeView, updateView, searchTerm, handleSort } = useProject();
   
   const rawBudgetData = useMemo(() => activeView.spreadsheetData || [], [activeView.spreadsheetData]);
   
   // Implement search filtering
-  const budgetData = useMemo(() => {
+  const filteredData = useMemo(() => {
       if (!searchTerm.trim()) return rawBudgetData;
       const lowerTerm = searchTerm.toLowerCase();
       
@@ -36,6 +36,25 @@ const SpreadsheetView: React.FC = () => {
           );
       });
   }, [rawBudgetData, searchTerm]);
+
+  // Implement Sorting
+  const budgetData = useMemo(() => {
+      if (!activeView.sort) return filteredData;
+      
+      const { columnId, direction } = activeView.sort;
+      const sorted = [...filteredData].sort((a, b) => {
+          const valA = a[columnId as keyof BudgetLineItem];
+          const valB = b[columnId as keyof BudgetLineItem];
+
+          if (valA === valB) return 0;
+          if (valA === null || valA === undefined) return 1;
+          if (valB === null || valB === undefined) return -1;
+
+          if (valA < valB) return direction === 'asc' ? -1 : 1;
+          return direction === 'asc' ? 1 : -1;
+      });
+      return sorted;
+  }, [filteredData, activeView.sort]);
 
   const columns = useMemo(() => activeView.spreadsheetColumns || [], [activeView.spreadsheetColumns]);
   const displayDensity = activeView.displayDensity;
@@ -325,6 +344,26 @@ const SpreadsheetView: React.FC = () => {
     document.body.classList.add('grabbing');
   };
 
+  const handleColumnMove = useCallback((fromId: string, toId: string, position: 'left' | 'right') => {
+      const newCols = [...columns];
+      const sIndex = newCols.findIndex(c => c.id === fromId);
+      let tIndex = newCols.findIndex(c => c.id === toId);
+      
+      if (sIndex === -1 || tIndex === -1) return;
+
+      if (position === 'right') {
+          tIndex++;
+      }
+      
+      if (sIndex < tIndex) {
+          tIndex--;
+      }
+      
+      const [moved] = newCols.splice(sIndex, 1);
+      newCols.splice(tIndex, 0, moved);
+      updateView({ spreadsheetColumns: newCols });
+  }, [columns, updateView]);
+
   const totals = useMemo(() => {
     return budgetData.reduce((acc, item) => ({
       effortHours: acc.effortHours + (item.effortHours || 0),
@@ -362,6 +401,9 @@ const SpreadsheetView: React.FC = () => {
                     isScrolled={isScrolled}
                     fontSize={activeView.fontSize}
                     displayDensity={displayDensity}
+                    sort={activeView.sort}
+                    onSort={handleSort}
+                    onColumnMove={handleColumnMove}
                     onMouseDown={onMouseDown}
                     onContextMenu={(e, colId) => handleContextMenu(e, 'column', colId)}
                 />

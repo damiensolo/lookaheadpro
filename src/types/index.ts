@@ -62,7 +62,7 @@ export interface Task {
   style?: TaskStyle;
 }
 
-export type ColumnId = 'name' | 'status' | 'assignee' | 'dates' | 'progress' | 'details' | 'priority';
+export type ColumnId = string;
 
 export interface Column {
   id: ColumnId;
