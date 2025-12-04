@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import HoverMenu, { CategoryData, StandardCategoryData } from './HoverMenu';
+import HoverMenu from './HoverMenu';
 
 // --- Icon Definitions ---
 
@@ -85,6 +84,7 @@ const SubmittalsIcon = () => <NavIconWrapper><path d="M14.5 2H6a2 2 0 0 0-2 2v16
 const SpecbookIcon = () => <NavIconWrapper><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></NavIconWrapper>;
 
 // General Icons
+const ReportsIcon = () => <NavIconWrapper><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></NavIconWrapper>;
 const SearchIcon = () => <NavIconWrapper><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></NavIconWrapper>;
 const ChatIcon = () => <NavIconWrapper><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="15" y1="10" x2="15.01" y2="10"></line><line x1="11" y1="10" x2="11.01" y2="10"></line><line x1="7" y1="10" x2="7.01" y2="10"></line></NavIconWrapper>;
 const HelpIcon = () => <NavIconWrapper><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></NavIconWrapper>;
@@ -95,11 +95,37 @@ const BellIcon = () => <NavIconWrapper><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h
 const ProjectManagementMainIcon = () => <MainIconWrapper className="bg-orange-500"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></MainIconWrapper>;
 const CollaborationMainIcon = () => <MainIconWrapper className="bg-sky-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></MainIconWrapper>;
 const QualityMainIcon = () => <MainIconWrapper className="bg-rose-500"><polyline points="3 6 4 7 6 5"></polyline><polyline points="3 12 4 13 6 11"></polyline><polyline points="3 18 4 19 6 17"></polyline><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line></MainIconWrapper>;
-const FinanceMainIcon = () => <MainIconWrapper className="bg-green-500"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></NavIconWrapper>;
-const FieldOpsMainIcon = () => <MainIconWrapper className="bg-amber-500"><path d="M20.5 14.5A4.5 4.5 0 0 0 21 12V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6c0 1.2.4 2.4 1.2 3.2L7 18.5V21h10v-2.5l2.8-2.8H21z"/><path d="M7 15h10"/></NavIconWrapper>;
-const DocumentationMainIcon = () => <MainIconWrapper className="bg-cyan-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></NavIconWrapper>;
+const FinanceMainIcon = () => <MainIconWrapper className="bg-green-500"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></MainIconWrapper>;
+const FieldOpsMainIcon = () => <MainIconWrapper className="bg-amber-500"><path d="M20.5 14.5A4.5 4.5 0 0 0 21 12V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6c0 1.2.4 2.4 1.2 3.2L7 18.5V21h10v-2.5l2.8-2.8H21z"/><path d="M7 15h10"/></MainIconWrapper>;
+const DocumentationMainIcon = () => <MainIconWrapper className="bg-cyan-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></MainIconWrapper>;
 
 // --- Navigation Data Structure ---
+
+// Fix: Add explicit type definitions for navigation data to resolve TypeScript error.
+// These types match the props expected by HoverMenu.tsx.
+interface PrimaryMenuItemData {
+    key: string;
+    label: string;
+    description: string;
+    icon: React.ReactNode;
+    navIcon: React.ReactNode;
+}
+
+interface MoreItem {
+    key: 'more';
+    title: 'More';
+    items: string[];
+}
+
+interface StandardCategoryData {
+    key: string;
+    title: string;
+    mainIcon: React.ReactNode;
+    items: PrimaryMenuItemData[];
+}
+
+type CategoryData = StandardCategoryData | MoreItem;
+
 
 const navigationData: { [key: string]: CategoryData } = {
     projectManagement: {
@@ -284,7 +310,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({ projects, selectedPro
                         animate={{ opacity: 1, y: 5 }}
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute z-[100] w-max min-w-full mt-1 bg-[#2a2a2a] border border-gray-600 rounded-md shadow-lg"
+                        className="absolute z-10 w-max min-w-full mt-1 bg-[#2a2a2a] border border-gray-600 rounded-md shadow-lg"
                     >
                         <ul className="p-1" role="listbox">
                             {projects.map(project => (
@@ -333,10 +359,6 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
     const [activeCategoryKey, setActiveCategoryKey] = useState<StandardCategoryKey>('documentation');
     const [activeSubcategoryKey, setActiveSubcategoryKey] = useState<string>('document');
     const [selectedProject, setSelectedProject] = useState<Project>(projects[0]);
-    
-    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-    const menuTriggerRef = useRef<HTMLDivElement>(null);
-    const timeoutRef = useRef<number | null>(null);
 
     const categoryColors: { [key: string]: string } = {
         projectManagement: 'text-orange-500',
@@ -347,6 +369,8 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
         documentation: 'text-cyan-500',
     };
 
+    // FIX: Add type guard to safely access properties on `category`.
+    // This ensures `category` is a `StandardCategoryData` before we try to find an item in its `items` array.
     const handleSelect = (categoryKey: string, subcategoryKey: string) => {
         if (categoryKey !== 'more') {
             const category = navigationData[categoryKey];
@@ -367,28 +391,13 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
         setSelectedProject(project);
     };
 
-    const handleMouseEnter = () => {
-        if (timeoutRef.current) {
-            window.clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
-        }
-        if (menuTriggerRef.current) {
-            const rect = menuTriggerRef.current.getBoundingClientRect();
-            setMenuPos({ top: rect.bottom, left: rect.left });
-        }
-        setMenuVisible(true);
-    };
-
-    const handleMouseLeave = () => {
-        if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = window.setTimeout(() => {
-            setMenuVisible(false);
-        }, 150);
-    };
-
     const activeCategory = navigationData[activeCategoryKey];
 
+    // FIX: Add a type guard to ensure activeCategory is of type StandardCategoryData.
+    // This resolves errors related to accessing properties like `mainIcon` and iterating over `items`
+    // which are not guaranteed to exist on the general `CategoryData` type.
     if (!('mainIcon' in activeCategory)) {
+        // This path should be unreachable given the state logic, but it's needed for type safety.
         return null;
     }
 
@@ -396,29 +405,25 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
     const activeColor = categoryColors[activeCategoryKey] || 'text-white';
 
     return (
-        <header className="bg-[#1e1e1e] text-white font-sans shadow-lg relative z-[100]">
+        <header className="bg-[#1e1e1e] text-white font-sans shadow-lg">
             <div className="pl-2 pr-4 pt-3 pb-2 flex flex-col gap-y-2">
                 {/* Top Row for main navigation and actions */}
                 <div className="flex justify-between items-center">
                     {/* Left & Center Nav Items */}
                     <div className="flex items-center gap-x-4">
                         <div 
-                            ref={menuTriggerRef}
                             className="relative h-12 w-[72px] pr-1 flex justify-center items-center"
-                            onMouseEnter={handleMouseEnter}
-                            onMouseLeave={handleMouseLeave}
+                            onMouseEnter={() => setMenuVisible(true)}
+                            onMouseLeave={() => setMenuVisible(false)}
                         >
                             {activeCategory.mainIcon}
+                            <div className="absolute top-full h-4 w-full" />
                             <AnimatePresence>
                                 {isMenuVisible && 
                                     <HoverMenu 
                                         navigationData={navigationData}
                                         menuLayout={menuLayout}
                                         onSelect={handleSelect}
-                                        top={menuPos.top}
-                                        left={menuPos.left}
-                                        onMouseEnter={handleMouseEnter}
-                                        onMouseLeave={handleMouseLeave}
                                     />
                                 }
                             </AnimatePresence>
@@ -459,7 +464,7 @@ const Header: React.FC<HeaderProps> = ({ onSelectionChange }) => {
                 </div>
 
                 {/* Bottom Row for Project Details */}
-                <div className="text-xs text-gray-400 flex items-center">
+                <div className="text-sm text-gray-400 flex items-center">
                     <div className="w-[68px] shrink-0 text-center">
                         <span className="font-semibold text-white">
                             {categoryAbbreviations[activeCategoryKey]}

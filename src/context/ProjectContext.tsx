@@ -1,5 +1,4 @@
 
-
 import React, { createContext, useState, useMemo, useCallback, useContext, SetStateAction, ReactNode } from 'react';
 import { MOCK_TASKS, MOCK_BUDGET_DATA } from '../data';
 import { Task, View, FilterRule, Priority, ColumnId, Status, DisplayDensity, Column, ViewMode } from '../types';
@@ -27,10 +26,11 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
         displayDensity: 'compact',
         columns: [],
         spreadsheetData: MOCK_BUDGET_DATA,
-        spreadsheetColumns: SPREADSHEET_DEFAULT_COLUMNS,
+        // Create a fresh copy of columns to avoid mutation of the constant
+        spreadsheetColumns: SPREADSHEET_DEFAULT_COLUMNS.map(col => ({ ...col })),
       };
     case 'lookahead':
-       return { ...baseConfig, type: 'lookahead', columns: DEFAULT_COLUMNS };
+       return { ...baseConfig, type: 'lookahead', columns: DEFAULT_COLUMNS.map(col => ({ ...col })) };
     case 'board':
     case 'gantt':
       return { ...baseConfig, type: viewMode, columns: [] };
@@ -39,7 +39,8 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
       return {
         ...baseConfig,
         type: 'table',
-        columns: DEFAULT_COLUMNS,
+        // Create a fresh copy of columns to avoid mutation of the constant
+        columns: DEFAULT_COLUMNS.map(col => ({ ...col })),
         spreadsheetData: [],
         spreadsheetColumns: [],
       };
@@ -163,16 +164,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
   
   const handleViewModeChange = (mode: ViewMode) => {
-      const firstViewForMode = views.find(v => v.type === mode);
+      // Always switch to a fresh default view for the selected mode
       setActiveViewMode(mode);
-
-      if (firstViewForMode) {
-          setActiveViewId(firstViewForMode.id);
-          setTransientView(null);
-      } else {
-          setActiveViewId(null);
-          setTransientView({ id: 'transient', name: `Default ${mode}`, ...getDefaultViewConfig(mode) });
-      }
+      setActiveViewId(null);
+      setTransientView({ 
+          id: 'transient', 
+          name: 'Default View', 
+          ...getDefaultViewConfig(mode) 
+      });
       setDetailedTaskId(null);
   };
 

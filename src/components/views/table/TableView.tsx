@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ColumnId, DisplayDensity, TaskStyle, Task } from '../../../types';
@@ -42,7 +43,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
     setDetailedTaskId,
     detailedTaskId,
     handleSort,
-    setColumns,
+    updateView,
   } = useProject();
   const { sortedTasks, visibleTaskIds, rowNumberMap } = useProjectData(tasks, activeView, searchTerm);
 
@@ -112,8 +113,9 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
   };
 
   const handleResize = useCallback((columnId: ColumnId, newWidth: number) => {
-    setColumns(prev => prev.map(c => c.id === columnId ? { ...c, width: `${newWidth}px` } : c));
-  }, [setColumns]);
+    const updatedColumns = columns.map(c => c.id === columnId ? { ...c, width: `${newWidth}px` } : c);
+    updateView({ columns: updatedColumns });
+  }, [columns, updateView]);
 
   const onMouseDown = (columnId: ColumnId, minWidth: number | undefined) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -184,21 +186,20 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
       setDropIndicator(null);
 
       if (sourceColumnId && sourceColumnId !== targetColumnId) {
-          setColumns(prev => {
-               const newCols = [...prev];
-               const sIndex = newCols.findIndex(c => c.id === sourceColumnId);
-               let tIndex = newCols.findIndex(c => c.id === targetColumnId);
-               
-               if(dropIndicator?.position === 'right') {
-                   tIndex++;
-               }
-               if(sIndex < tIndex) {
-                   tIndex--;
-               }
-               const [moved] = newCols.splice(sIndex, 1);
-               newCols.splice(tIndex, 0, moved);
-               return newCols;
-          });
+           const newCols = [...columns];
+           const sIndex = newCols.findIndex(c => c.id === sourceColumnId);
+           let tIndex = newCols.findIndex(c => c.id === targetColumnId);
+           
+           if(dropIndicator?.position === 'right') {
+               tIndex++;
+           }
+           if(sIndex < tIndex) {
+               tIndex--;
+           }
+           const [moved] = newCols.splice(sIndex, 1);
+           newCols.splice(tIndex, 0, moved);
+           
+           updateView({ columns: newCols });
       }
   };
 

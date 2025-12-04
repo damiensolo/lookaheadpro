@@ -123,7 +123,7 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableCl
       }
   };
 
-  const onResetColumns = () => setColumns(DEFAULT_COLUMNS);
+  const onResetColumns = () => setColumns(DEFAULT_COLUMNS.map(c => ({ ...c })));
 
   return (
     <div ref={menuRef} className={cn("absolute top-full right-0 mt-2 w-72 bg-white rounded-md shadow-lg border border-gray-200 z-50 flex flex-col", className)}>

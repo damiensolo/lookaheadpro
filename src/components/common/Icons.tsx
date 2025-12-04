@@ -38,7 +38,12 @@ export const BoardIcon: React.FC<IconProps> = ({ title, ...props }) => (
 export const GanttIcon: React.FC<IconProps> = ({ title, ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     {title && <title>{title}</title>}
-    <path d="M2.99902 3V16.2C2.99902 17.8802 2.99902 18.7202 3.326 19.362C3.61362 19.9265 4.07257 20.3854 4.63705 20.673C5.27879 21 6.11887 21 7.79902 21H20.999M19.9998 15H15.9998M12.9998 7.00002H6.99978M17.9998 11H8.99978" />
+    <line x1="10" y1="6" x2="21" y2="6"></line>
+    <line x1="10" y1="12" x2="18" y2="12"></line>
+    <line x1="10" y1="18" x2="20" y2="18"></line>
+    <line x1="3" y1="6" x2="4" y2="6"></line>
+    <line x1="3" y1="12" x2="4" y2="12"></line>
+    <line x1="3" y1="18" x2="4" y2="18"></line>
   </svg>
 );
 

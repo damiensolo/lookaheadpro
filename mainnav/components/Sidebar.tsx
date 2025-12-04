@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 // --- Icon Definitions ---
@@ -61,7 +60,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ item, isActive, onClick }) =>
             e.preventDefault();
             onClick();
         }}
-        className={`relative flex flex-col items-center justify-center gap-1.5 h-[80px] text-xs transition-colors duration-200 ${isActive ? 'text-gray-900 font-bold' : 'text-gray-500 hover:text-gray-800 font-medium'}`}
+        className={`relative flex flex-col items-center justify-center gap-1.5 h-[80] text-xs font-medium transition-colors duration-200 ${isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-800'}`}
     >
         {item.icon}
         <span>{item.label}</span>
@@ -73,7 +72,7 @@ const Sidebar: React.FC = () => {
     const [activeItemKey, setActiveItemKey] = useState('dashboard');
 
     return (
-        <aside className="w-[80px] bg-gray-50 border-r border-gray-200 flex flex-col shrink-0">
+        <aside className="w-[80] bg-gray-50 border-r border-gray-200 flex flex-col shrink-0">
             <div className="flex-grow">
                 {sidebarItems.map((item) => (
                     <SidebarItem

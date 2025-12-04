@@ -1,10 +1,8 @@
-
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 
 // --- Type Definitions ---
-export interface PrimaryMenuItemData {
+interface PrimaryMenuItemData {
     key: string;
     label: string;
     description: string;
@@ -12,28 +10,24 @@ export interface PrimaryMenuItemData {
     navIcon: React.ReactNode;
 }
 
-export interface MoreItem {
+interface MoreItem {
     key: 'more';
     title: 'More';
     items: string[];
 }
-export interface StandardCategoryData {
+interface StandardCategoryData {
     key: string;
     title: string;
     mainIcon: React.ReactNode;
     items: PrimaryMenuItemData[];
 }
 
-export type CategoryData = StandardCategoryData | MoreItem;
+type CategoryData = StandardCategoryData | MoreItem;
 
 interface HoverMenuProps {
     navigationData: { [key: string]: CategoryData };
     menuLayout: { [key: string]: string[] };
     onSelect: (categoryKey: string, subcategoryKey: string) => void;
-    top: number;
-    left: number;
-    onMouseEnter: () => void;
-    onMouseLeave: () => void;
 }
 
 interface PrimaryMenuItemProps {
@@ -91,19 +85,14 @@ const renderColumn = (columnKeys: string[], navigationData: HoverMenuProps['navi
 
 
 // --- Main Component Definition ---
-const HoverMenu: React.FC<HoverMenuProps> = ({ navigationData, menuLayout, onSelect, top, left, onMouseEnter, onMouseLeave }) => {
-    if (typeof document === 'undefined') return null;
-
-    return createPortal(
+const HoverMenu: React.FC<HoverMenuProps> = ({ navigationData, menuLayout, onSelect }) => {
+    return (
         <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed mt-4 bg-white rounded-xl shadow-2xl p-8 z-[9999] origin-top-left"
-            style={{ top, left }}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
+            className="absolute top-full left-0 mt-4 bg-white rounded-xl shadow-2xl p-8 z-50 origin-top-left"
         >
             <div className="grid grid-cols-3 gap-x-8 text-black" style={{minWidth: '850px'}}>
                 <div className="space-y-8 border-r border-gray-100 pr-8">
@@ -116,8 +105,7 @@ const HoverMenu: React.FC<HoverMenuProps> = ({ navigationData, menuLayout, onSel
                     {renderColumn(menuLayout.column3, navigationData, onSelect)}
                 </div>
             </div>
-        </motion.div>,
-        document.body
+        </motion.div>
     );
 };
 
