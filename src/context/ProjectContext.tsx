@@ -32,7 +32,8 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
         spreadsheetColumns: getDefaultSpreadsheetColumns(),
       };
     case 'lookahead':
-       return { ...baseConfig, type: 'lookahead', columns: getDefaultTableColumns() };
+       // Deep copy table columns to ensure fresh references
+       return { ...baseConfig, type: 'lookahead', columns: JSON.parse(JSON.stringify(getDefaultTableColumns())) };
     case 'board':
     case 'gantt':
       return { ...baseConfig, type: viewMode, columns: [] };
@@ -41,7 +42,8 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
       return {
         ...baseConfig,
         type: 'table',
-        columns: getDefaultTableColumns(),
+        // Deep copy table columns to ensure fresh references and prevent any state leakage
+        columns: JSON.parse(JSON.stringify(getDefaultTableColumns())),
         spreadsheetData: [],
         spreadsheetColumns: [],
       };
