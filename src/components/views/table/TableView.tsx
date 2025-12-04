@@ -1,5 +1,4 @@
 
-
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ColumnId, DisplayDensity, TaskStyle, Task } from '../../../types';
@@ -349,10 +348,9 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
                             scope="col" 
                             className={`${headerHeightClass} px-6 font-semibold border-b border-gray-200 relative group cursor-pointer align-middle text-gray-700 ${showGridLines && !isLastVisibleColumn ? 'border-r border-gray-200' : ''}`}
                             style={{ width: col.width, zIndex: 5 }}
-                            onClick={(e) => {
-                            if (col.id === 'details') return;
-                            if ((e.target as HTMLElement).closest('.absolute.top-0.right-0')) return;
-                            handleSort(col.id);
+                            onClick={() => {
+                                if (col.id === 'details') return;
+                                handleSort(col.id);
                             }}
                             draggable
                             onDragStart={(e) => handleDragStartHeader(e, col.id)}

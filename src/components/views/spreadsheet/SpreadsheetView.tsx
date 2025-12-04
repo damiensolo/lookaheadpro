@@ -315,6 +315,7 @@ const SpreadsheetView: React.FC = () => {
   }, [columns, updateView]);
 
   const onMouseDown = (columnId: string) => (e: React.MouseEvent) => {
+    e.stopPropagation();
     e.preventDefault();
     activeResizerId.current = columnId;
     setResizingColumnId(columnId);
