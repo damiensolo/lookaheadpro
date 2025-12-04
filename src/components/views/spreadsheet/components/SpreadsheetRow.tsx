@@ -47,18 +47,16 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
     const customBorder = customStyle.borderColor;
     const rowHeightClass = getRowHeightClass(displayDensity);
 
+    // This style will only apply text color to the whole row
     const rowStyle: React.CSSProperties = {};
-    if (customStyle.backgroundColor) rowStyle.backgroundColor = customStyle.backgroundColor;
     if (customStyle.textColor) rowStyle.color = customStyle.textColor;
 
-    let rowClasses = `${rowHeightClass} group bg-white`;
-    if (!customStyle.backgroundColor) {
-        rowClasses += isSelected ? ' bg-blue-50' : ' hover:bg-gray-50';
-    }
+    // Background is removed from the TR and applied to individual TDs to fix shadow/border bug
+    const rowClasses = `${rowHeightClass} group`;
 
     return (
         <tr className={rowClasses} style={rowStyle}>
-            {/* Row Number Cell */}
+            {/* Row Number Cell - its background is self-contained. No style tag needed for color. */}
             <td 
                 onClick={(e) => onRowHeaderClick(row.id, e.metaKey || e.ctrlKey)}
                 onContextMenu={(e) => onContextMenu(e, 'row', row.id)}
@@ -72,9 +70,6 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
                     }
                     ${isScrolled ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)]' : ''}
                 `}
-                style={{
-                    color: isSelected ? undefined : (isRowFocused ? undefined : customStyle.textColor),
-                }}
             >
                 <div className="flex items-center justify-center h-full relative z-20" style={{ fontSize }}>
                     {row.sNo}
@@ -100,18 +95,23 @@ const SpreadsheetRow: React.FC<SpreadsheetRowProps> = ({
                     content = formatCurrency(content as number);
                 }
 
+                // Cell background logic, moved from TR to here
+                const cellBgClass = isSelected ? 'bg-blue-50' : 'bg-white group-hover:bg-gray-50';
+
                 return (
                     <td 
                         key={col.id}
                         onClick={() => onCellClick(row.id, col.id)}
                         onContextMenu={(e) => onContextMenu(e, 'cell', row.id, col.id)}
                         className={`border-r border-gray-200 px-2 text-gray-600 relative cursor-default 
+                            ${!customStyle.backgroundColor ? cellBgClass : ''}
                             ${!customBorder ? 'border-b' : ''}
                             ${col.align === 'right' ? 'text-right' : 'text-left'}
                             ${col.id === 'name' || col.id === 'totalBudget' ? 'font-medium text-gray-900' : ''}
                         `}
+                        style={{ backgroundColor: customStyle.backgroundColor }}
                     >
-                        <div className="truncate w-full relative z-20" title={typeof content === 'string' ? content : undefined} style={{ color: customStyle.textColor }}>
+                        <div className="truncate w-full relative z-20" title={typeof content === 'string' ? content : undefined}>
                             {content}
                         </div>
                         {isCellFocused && (
