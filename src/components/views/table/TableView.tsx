@@ -86,30 +86,25 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
   };
 
   const handleBulkStyleUpdate = (newStyle: Partial<TaskStyle>) => {
-      const findTask = (taskList: Task[], id: number): Task | undefined => {
-          for (const task of taskList) {
-              if (task.id === id) return task;
-              if (task.children) {
-                  const found = findTask(task.children, id);
-                  if (found) return found;
-              }
-          }
-          return undefined;
-      };
+    const newStyles = { ...(activeView.taskStyles || {}) };
+    const selectedIds = Array.from(selectedTaskIds);
 
-      selectedTaskIds.forEach(taskId => {
-        // Recursively find the task to ensure we update sub-tasks correctly
-        const task = findTask(tasks, taskId);
-        if (task) {
-            const updatedStyle = { ...task.style, ...newStyle };
-            // Clean up undefined values
-            if (newStyle.backgroundColor === undefined) delete updatedStyle.backgroundColor;
-            if (newStyle.borderColor === undefined) delete updatedStyle.borderColor;
-            if (newStyle.textColor === undefined) delete updatedStyle.textColor;
+    for (const taskId of selectedIds) {
+        const currentStyle = newStyles[taskId] || {};
+        const mergedStyle = { ...currentStyle, ...newStyle };
+        
+        // Clean up undefined values to allow "unsetting"
+        if (newStyle.backgroundColor === undefined) delete mergedStyle.backgroundColor;
+        if (newStyle.borderColor === undefined) delete mergedStyle.borderColor;
+        if (newStyle.textColor === undefined) delete mergedStyle.textColor;
 
-            handleUpdateTask(taskId, { style: updatedStyle });
+        if (Object.keys(mergedStyle).length > 0) {
+            newStyles[taskId] = mergedStyle;
+        } else {
+            delete newStyles[taskId]; // Clean up empty style objects
         }
-      });
+    }
+    updateView({ taskStyles: newStyles });
   };
 
   const handleResize = useCallback((columnId: ColumnId, newWidth: number) => {
@@ -404,6 +399,7 @@ const TableView: React.FC<TableViewProps> = ({ isScrolled, density }) => {
                         showGridLines={showGridLines}
                         onShowDetails={handleShowDetails}
                         activeDetailedTaskId={detailedTaskId}
+                        taskStyles={activeView.taskStyles}
                     />
                     ))}
                 </tbody>

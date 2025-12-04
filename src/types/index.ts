@@ -133,5 +133,6 @@ export interface View {
   showGridLines: boolean;
   spreadsheetData?: BudgetLineItem[];
   spreadsheetColumns?: SpreadsheetColumn[];
+  taskStyles?: { [taskId: number]: TaskStyle };
   fontSize: number;
 }

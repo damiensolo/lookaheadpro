@@ -17,6 +17,7 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
     sort: null,
     displayDensity: 'comfortable' as DisplayDensity,
     showGridLines: false,
+    taskStyles: {},
     fontSize: 12,
   };
 

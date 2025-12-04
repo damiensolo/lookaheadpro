@@ -1,6 +1,7 @@
 
+
 import React, { Fragment, useEffect, useRef } from 'react';
-import { Task, Status, Column, ColumnId, DisplayDensity } from '../../../types';
+import { Task, Status, Column, ColumnId, DisplayDensity, TaskStyle } from '../../../types';
 import { EyeIcon, ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../../common/Icons';
 import { StatusDisplay, AssigneeAvatar, StatusSelector, ProgressDisplay } from '../../shared/TaskElements';
 import { formatDateForInput, formatDateFromInput, parseDate } from '../../../lib/dateUtils';
@@ -23,6 +24,7 @@ interface TableRowProps {
   showGridLines: boolean;
   onShowDetails: (taskId: number) => void;
   activeDetailedTaskId: number | null;
+  taskStyles?: { [taskId: number]: TaskStyle };
 }
 
 const getRowHeight = (density: DisplayDensity) => {
@@ -173,15 +175,16 @@ const DateCellContent: React.FC<{ task: Task, isEditing: boolean, onEdit: (cell:
     );
 };
 
-const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap, selectedTaskIds, onToggleRow, editingCell, onEditCell, onUpdateTask, columns, isScrolled, displayDensity, showGridLines, onShowDetails, activeDetailedTaskId }) => {
+const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap, selectedTaskIds, onToggleRow, editingCell, onEditCell, onUpdateTask, columns, isScrolled, displayDensity, showGridLines, onShowDetails, activeDetailedTaskId, taskStyles }) => {
   const isSelected = selectedTaskIds.has(task.id);
   const rowNum = rowNumberMap.get(task.id);
   const rowHeightClass = getRowHeight(displayDensity);
   
-  // Styles
-  const customBg = task.style?.backgroundColor;
-  const customBorder = task.style?.borderColor;
-  const customText = task.style?.textColor;
+  // Styles from the view object take precedence
+  const viewStyle = taskStyles ? taskStyles[task.id] : undefined;
+  const customBg = viewStyle?.backgroundColor;
+  const customBorder = viewStyle?.borderColor;
+  const customText = viewStyle?.textColor;
 
   const rowStyle: React.CSSProperties = {};
   if (customBg) rowStyle.backgroundColor = customBg;
@@ -315,6 +318,7 @@ const TableRow: React.FC<TableRowProps> = ({ task, level, onToggle, rowNumberMap
             showGridLines={showGridLines}
             onShowDetails={onShowDetails}
             activeDetailedTaskId={activeDetailedTaskId}
+            taskStyles={taskStyles}
         />
       ))}
     </Fragment>
