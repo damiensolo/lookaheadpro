@@ -2,7 +2,7 @@
 
 import { Column, Status, Priority, ColumnId, FilterOperator, SpreadsheetColumn } from '../types';
 
-export const DEFAULT_COLUMNS: Column[] = [
+export const getDefaultTableColumns = (): Column[] => [
   { id: 'details', label: '', width: '60px', visible: true, minWidth: 60 },
   { id: 'name', label: 'Task Name', width: '300px', visible: true, minWidth: 200 },
   { id: 'status', label: 'Status', width: '150px', visible: true, minWidth: 120 },
@@ -44,7 +44,7 @@ export const getEnumOptions = (columnId: ColumnId): { id: string, label: string 
     }
 };
 
-export const SPREADSHEET_DEFAULT_COLUMNS: SpreadsheetColumn[] = [
+export const getDefaultSpreadsheetColumns = (): SpreadsheetColumn[] => [
     { id: 'costCode', label: 'Cost Code', width: 120 },
     { id: 'name', label: 'Name', width: 250 },
     { id: 'divisionCode', label: 'Division Code', width: 130 },

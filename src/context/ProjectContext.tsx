@@ -1,8 +1,9 @@
 
+
 import React, { createContext, useState, useMemo, useCallback, useContext, SetStateAction, ReactNode } from 'react';
 import { MOCK_TASKS, MOCK_BUDGET_DATA } from '../data';
 import { Task, View, FilterRule, Priority, ColumnId, Status, DisplayDensity, Column, ViewMode } from '../types';
-import { DEFAULT_COLUMNS, SPREADSHEET_DEFAULT_COLUMNS } from '../constants';
+import { getDefaultTableColumns, getDefaultSpreadsheetColumns } from '../constants';
 
 type SortConfig = {
   columnId: ColumnId;
@@ -25,12 +26,12 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
         type: 'spreadsheet',
         displayDensity: 'compact',
         columns: [],
-        spreadsheetData: MOCK_BUDGET_DATA,
-        // Create a fresh copy of columns to avoid mutation of the constant
-        spreadsheetColumns: SPREADSHEET_DEFAULT_COLUMNS.map(col => ({ ...col })),
+        // Deep copy mock data to prevent reference pollution across resets
+        spreadsheetData: JSON.parse(JSON.stringify(MOCK_BUDGET_DATA)),
+        spreadsheetColumns: getDefaultSpreadsheetColumns(),
       };
     case 'lookahead':
-       return { ...baseConfig, type: 'lookahead', columns: DEFAULT_COLUMNS.map(col => ({ ...col })) };
+       return { ...baseConfig, type: 'lookahead', columns: getDefaultTableColumns() };
     case 'board':
     case 'gantt':
       return { ...baseConfig, type: viewMode, columns: [] };
@@ -39,8 +40,7 @@ const getDefaultViewConfig = (viewMode: ViewMode): Omit<View, 'id' | 'name'> => 
       return {
         ...baseConfig,
         type: 'table',
-        // Create a fresh copy of columns to avoid mutation of the constant
-        columns: DEFAULT_COLUMNS.map(col => ({ ...col })),
+        columns: getDefaultTableColumns(),
         spreadsheetData: [],
         spreadsheetColumns: [],
       };

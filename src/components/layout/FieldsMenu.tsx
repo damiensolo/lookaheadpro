@@ -1,9 +1,10 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ColumnId, DisplayDensity } from '../../types';
 import { GripVerticalIcon, MinusIcon, PlusIcon } from '../common/Icons';
 import { useProject } from '../../context/ProjectContext';
-import { DEFAULT_COLUMNS } from '../../constants';
+import { getDefaultTableColumns } from '../../constants';
 import { cn } from '../../lib/utils';
 
 interface SettingsMenuProps {
@@ -123,7 +124,7 @@ const FieldsMenu: React.FC<SettingsMenuProps> = ({ onClose, className, disableCl
       }
   };
 
-  const onResetColumns = () => setColumns(DEFAULT_COLUMNS.map(c => ({ ...c })));
+  const onResetColumns = () => setColumns(getDefaultTableColumns());
 
   return (
     <div ref={menuRef} className={cn("absolute top-full right-0 mt-2 w-72 bg-white rounded-md shadow-lg border border-gray-200 z-50 flex flex-col", className)}>
